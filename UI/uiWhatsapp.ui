@@ -1,0 +1,1286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1694</width>
+    <height>880</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string/>
+  </property>
+  <widget class="QTabWidget" name="tabWidgetMain">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1661</width>
+     <height>880</height>
+    </rect>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QTabBar::tab{height:40px}</string>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tabAccount">
+    <attribute name="title">
+     <string>帐号管理</string>
+    </attribute>
+    <widget class="QGroupBox" name="groupBoxAdvertise">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>670</y>
+       <width>400</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>消息</string>
+     </property>
+     <widget class="QWidget" name="groupBoxToolbar1" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>20</y>
+        <width>401</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <widget class="QPushButton" name="btnSendNormalMsg">
+       <property name="geometry">
+        <rect>
+         <x>150</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>普通号私发</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnSendGroupMsg">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>普通号群发</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnPresettingMessages">
+       <property name="geometry">
+        <rect>
+         <x>60</x>
+         <y>0</y>
+         <width>80</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>预设消息</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBoxGroupSetting">
+     <property name="geometry">
+      <rect>
+       <x>420</x>
+       <y>670</y>
+       <width>400</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>群组链接</string>
+     </property>
+     <widget class="QWidget" name="groupBoxToolbar2" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>20</y>
+        <width>401</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <widget class="QPushButton" name="btnEnterGroup">
+       <property name="geometry">
+        <rect>
+         <x>65</x>
+         <y>0</y>
+         <width>66</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>加入群</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnCollectGroupMembers">
+       <property name="geometry">
+        <rect>
+         <x>140</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>采集群成员</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnCollectGroupInfo">
+       <property name="geometry">
+        <rect>
+         <x>240</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>遍历群信息</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBoxAddUserInGroup">
+     <property name="geometry">
+      <rect>
+       <x>830</x>
+       <y>670</y>
+       <width>400</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>自建群组</string>
+     </property>
+     <widget class="QWidget" name="groupBoxToolbar3" native="true">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>20</y>
+        <width>401</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <widget class="QPushButton" name="btnAddUserInGroup">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>拉用户进群</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnCreateGroup">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>创建/录入 群</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnDeleteGroup">
+       <property name="geometry">
+        <rect>
+         <x>150</x>
+         <y>0</y>
+         <width>90</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
+       <property name="text">
+        <string>删除/移出 群</string>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="toolbarAccount2" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>610</y>
+       <width>891</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>821</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="btnAddSession">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>添加会话</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSetInfo">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>设置资料</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPostStatus">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>发布动态</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLikeStatus">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>点赞动态</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLikeTheMessage">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>点赞聊天信息</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDetermineDisable">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>封号检测</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnMoreOperate">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <property name="text">
+          <string>更多操作</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="toolbarAccount1" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1241</width>
+       <height>75</height>
+      </rect>
+     </property>
+     <widget class="QComboBox" name="comboBoxRegion">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>地区查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有地区</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分地区</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxIndustry">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>行业查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有行业</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分行业</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLineEdit" name="editUserName">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>用户名查询</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnAccountTableSave">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>9</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>保存</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editUserId">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>账号查询</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editRemark">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>备注查询</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkAccountOrder">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>13</y>
+        <width>61</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>倒序</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnAccountTableRefresh">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>39</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>查询</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxEnable">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="placeholderText">
+       <string>封禁状态查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>全部(可用状态查询)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>可用</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>封号</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxCountry">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>国家查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有国家</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分国家</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxProvince">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>省份查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有省份</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分省份</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxCity">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>城市查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有城市</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分城市</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxUsed">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>封禁状态查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>全部(使用状态查询)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>启用</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>停用</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLineEdit" name="editSessionCount">
+      <property name="geometry">
+       <rect>
+        <x>720</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>会话数量查询</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editBotCount">
+      <property name="geometry">
+       <rect>
+        <x>720</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>机器人数量查询</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxRestricted">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>封禁状态查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>全部(受限状态查询)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>可用</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>限制</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxUnableOpen">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>封禁状态查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>全部(代理状态查询)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>可用</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>失效</string>
+       </property>
+      </item>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tabGroup">
+    <attribute name="title">
+     <string>群管理</string>
+    </attribute>
+    <widget class="QWidget" name="toolbarGroup" native="true">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>1571</width>
+       <height>75</height>
+      </rect>
+     </property>
+     <widget class="QComboBox" name="comboBoxRegionForGroup">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>地区查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有地区</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分地区</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLineEdit" name="editGroupTitle">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>群名称查询</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editRemarkForGroup">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>备注查询</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnImportGroups">
+      <property name="geometry">
+       <rect>
+        <x>920</x>
+        <y>9</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>导入</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnExportGroups">
+      <property name="geometry">
+       <rect>
+        <x>1010</x>
+        <y>9</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>导出</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkGroupOrder">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>13</y>
+        <width>61</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>倒序</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxIndustryForGroup">
+      <property name="geometry">
+       <rect>
+        <x>720</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>行业查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有行业</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分行业</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="btnGroupTableRefresh">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>39</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>查询</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnGroupTableSave">
+      <property name="geometry">
+       <rect>
+        <x>830</x>
+        <y>10</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>保存</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editGroupName">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>群链接查询</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editGroupOther">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>其它信息查询</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxLinkType">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="placeholderText">
+       <string/>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有链接</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>群组</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>频道</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>用户</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxCountryForGroup">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>国家查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有国家</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分国家</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxProvinceForGroup">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>省份查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有省份</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分省份</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxCityForGroup">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>城市查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>所有城市</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>未划分城市</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="btnMoreOperateGroup">
+      <property name="geometry">
+       <rect>
+        <x>920</x>
+        <y>39</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>更多操作</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editMinMembers">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>最小成员数</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editMaxMembers">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>最大成员数</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxIndustryConfirm">
+      <property name="geometry">
+       <rect>
+        <x>720</x>
+        <y>40</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+      <property name="placeholderText">
+       <string>行业查询</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>行业确认(所有)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>行业已确认</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>行业未确认</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QComboBox" name="comboBoxUsedForGroup">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>10</y>
+        <width>100</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>全部(使用状态查询)</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>全部(使用状态查询)</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>启用</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>停用</string>
+       </property>
+      </item>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tabStatistics">
+    <attribute name="title">
+     <string>数据统计</string>
+    </attribute>
+    <widget class="QWidget" name="toolbarStatistics" native="true">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>0</y>
+       <width>1131</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <widget class="QLineEdit" name="editAccountForStatistics">
+      <property name="geometry">
+       <rect>
+        <x>320</x>
+        <y>10</y>
+        <width>120</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>账号查询</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkStatisticsOrder">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>13</y>
+        <width>61</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>倒序</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="btnStatisticsTableRefresh">
+      <property name="geometry">
+       <rect>
+        <x>690</x>
+        <y>9</y>
+        <width>80</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="text">
+       <string>查询</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboDepartmentForStatistics">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>10</y>
+        <width>120</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>部门查询</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboStatisticsType">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>10</y>
+        <width>120</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="placeholderText">
+       <string>统计类型</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>总汇</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>消息统计</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>账号统计</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QDateEdit" name="dateEdit">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>10</y>
+        <width>110</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QDateEdit" name="dateEdit_2">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>10</y>
+        <width>110</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

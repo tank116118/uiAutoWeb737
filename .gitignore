@@ -1,0 +1,9 @@
+/.idea
+/UserData
+/dist
+/build
+/Lib
+/contacts
+**__pycache__/
+/Static/storage.sto
+/Static/Telegram/Telegram.exe
