@@ -161,14 +161,15 @@ class Sheets737:
         cellList[Tools.excelColumnToNumber('BM') - 1] = f'=IFERROR(DL{rowIndex}/C{rowIndex},0)'
         cellList[Tools.excelColumnToNumber('BN') - 1] = f'=IFERROR(DL{rowIndex}/B{rowIndex},0)'
 
-    def append(self, summary:  Summary):
+    def append(self, summary:  Summary, checkDate: bool = True):
         date = datetime.fromtimestamp(summary.daytime)
         dateStr: str = date.strftime("%Y-%m-%d")
 
         # 判断当前日期数据是否存在
-        existDate = self.__gs.date_exists_in_column('Sheet1', 'A', dateStr, weekday_aware=True)
-        if existDate:
-            return
+        if checkDate:
+            existDate = self.__gs.date_exists_in_column('Sheet1', 'A', dateStr, weekday_aware=True)
+            if existDate:
+                return True
 
         rowCount = self.__gs.get_data_row_count('Sheet1')
 
@@ -179,6 +180,32 @@ class Sheets737:
         Sheets737.__fillList(rowCount + 1, cellList, summary, dateStr)
         isSuccess = self.__gs.append_rows('Sheet1', [cellList])
         if isSuccess:
-            print("追加成功:")
+            print("sheet737,追加成功")
+            return True
         else:
-            print("追加失败:")
+            print("sheet737,追加失败")
+            return False
+
+    def update(self, summary:  Summary, indexRow):
+        date = datetime.fromtimestamp(summary.daytime)
+        dateStr: str = date.strftime("%Y-%m-%d")
+
+        length = Tools.excelColumnToNumber('DL')
+        default_value = None  # 可以替换为你想要的初始值
+        cellList = [default_value for _ in range(length)]
+
+        Sheets737.__fillList(indexRow, cellList, summary, dateStr)
+        isSuccess = self.__gs.update_row('Sheet1',indexRow,[cellList],start_column=1)
+        # isSuccess = self.__gs.update_row('Sheet1', indexRow, [['2025-07-30']])
+        if isSuccess:
+            print("sheet737,修改成功")
+            return True
+        else:
+            print("sheet737,修改失败")
+            return False
+
+    def getDateColumn(self)->list:
+        result = self.__gs.get_column_data('Sheet1','A',skip_header=True)
+        if result is None or len(result) <= 0:
+            return []
+        return result[1:]

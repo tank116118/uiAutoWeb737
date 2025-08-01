@@ -73,7 +73,7 @@ from datetime import datetime, timedelta
 # a = Tools.dateToExcelSerial('2025-07-27')
 # print(a)
 # b = Tools.convertTimeToTimezone('America/Sao_Paulo')
-# print(b)
+# print(str(b.date()))
 
 # webSite7 = WebSite7()
 # c = webSite7.getOperating('2025-06-07')
@@ -132,6 +132,7 @@ from datetime import datetime, timedelta
 #         summary = summaryList[i]
 #         sheets737.append(summary)
 #         print('done')
+
 
 
 

@@ -473,3 +473,269 @@ class GoogleSheets:
         except HttpError as error:
             print(f"获取行数时发生错误: {error}")
             return 0
+
+    def get_column_data(
+            self,
+            sheet_name: str,
+            column: str,
+            spreadsheet_id: str = None,
+            skip_header: bool = False,
+            skip_blanks: bool = True,
+            value_render_option: str = "FORMATTED_VALUE",
+            max_results: int = None
+    ) -> Union[List[str], List[float], List[bool], List[List[Union[str, float, bool]]]]:
+        """
+        获取指定列的数据
+
+        参数:
+            sheet_name: 工作表名称
+            column: 列字母(如"A")或列索引(如1)
+            spreadsheet_id: 可选，指定电子表格ID
+            skip_header: 是否跳过第一行(表头)
+            skip_blanks: 是否跳过空单元格
+            value_render_option:
+                "FORMATTED_VALUE" - 返回显示值(默认)
+                "UNFORMATTED_VALUE" - 返回原始值
+                "FORMULA" - 返回公式
+            max_results: 可选，限制返回结果数量
+
+        返回:
+            列数据列表，根据内容自动判断类型
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        # 转换列索引为字母(如果输入是数字)
+        if isinstance(column, int):
+            if column < 1:
+                raise ValueError("列索引必须大于0")
+            column = self._column_index_to_letter(column)
+
+        range_name = f"{sheet_name}!{column}:{column}"
+
+        try:
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                majorDimension="COLUMNS",  # 按列获取
+                valueRenderOption=value_render_option
+            ).execute()
+
+            values = result.get('values', [[]])
+            column_data = values[0] if values else []
+
+            # 处理数据
+            if skip_header and column_data:
+                column_data = column_data[1:]
+
+            if skip_blanks:
+                column_data = [cell for cell in column_data if cell != '' and cell is not None]
+
+            if max_results is not None and max_results > 0:
+                column_data = column_data[:max_results]
+
+            return column_data
+
+        except HttpError as error:
+            print(f"读取列数据时发生错误: {error}")
+            return []
+
+    def get_column_data_with_metadata(
+            self,
+            sheet_name: str,
+            column: str,
+            spreadsheet_id: str = None
+    ) -> List[dict[str, Union[str, float, bool, dict]]]:
+        """
+        获取列数据及单元格元数据(包括格式、公式等)
+
+        返回包含完整单元格信息的字典列表
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+
+        # 转换列索引为字母
+        if isinstance(column, int):
+            column = self._column_index_to_letter(column)
+
+        range_name = f"{sheet_name}!{column}:{column}"
+
+        try:
+            result = self.service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                ranges=[range_name],
+                includeGridData=True
+            ).execute()
+
+            sheet_data = result['sheets'][0]['data'][0]
+            row_data = sheet_data.get('rowData', [])
+
+            cells = []
+            for row in row_data:
+                if 'values' in row and row['values']:
+                    cell_info = {
+                        'value': row['values'][0].get('formattedValue'),
+                        'raw_value': row['values'][0].get('effectiveValue'),
+                        'formula': row['values'][0].get('userEnteredValue', {}).get('formulaValue'),
+                        'format': row['values'][0].get('userEnteredFormat', {}),
+                        'note': row['values'][0].get('note')
+                    }
+                    cells.append(cell_info)
+
+            return cells
+
+        except HttpError as error:
+            print(f"获取列元数据时发生错误: {error}")
+            return []
+
+    def update_row(
+            self,
+            sheet_name: str,
+            row_number: int,
+            new_values: List[Union[str, int, float, bool]],
+            spreadsheet_id: str = None,
+            value_input_option: str = "USER_ENTERED",
+            start_column: Union[str, int] = 1
+    ) -> bool:
+        """
+        修改指定行的数据
+
+        参数:
+            sheet_name: 工作表名称
+            row_number: 行号(1-based)
+            new_values: 新值列表
+            spreadsheet_id: 可选，指定电子表格ID
+            value_input_option:
+                "RAW" - 直接插入原始值
+                "USER_ENTERED" - 像用户输入一样解释值(默认)
+            start_column: 起始列(字母或数字，默认为1/A列)
+
+        返回:
+            是否成功更新
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        # 转换列索引为字母
+        if isinstance(start_column, int):
+            start_column = self._column_index_to_letter(start_column)
+
+        # 构造范围(如 "Sheet1!A2:C2")
+        range_name = f"{sheet_name}!{start_column}{row_number}:{self._column_index_to_letter(len(new_values[0]) + self._letter_to_column_index(start_column) - 1)}{row_number}"
+
+        try:
+            body = {
+                "values": new_values  # 注意: 需要二维数组
+            }
+            result = self.service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueInputOption=value_input_option,
+                body=body
+            ).execute()
+
+            print(f"更新了 {result.get('updatedCells')} 个单元格")
+            return True
+
+        except HttpError as error:
+            print(f"更新行时发生错误: {error}")
+            return False
+
+    def update_row_by_filter(
+            self,
+            sheet_name: str,
+            filter_column: Union[str, int],
+            filter_value: Union[str, int, float, bool],
+            new_values: List[Union[str, int, float, bool]],
+            spreadsheet_id: str = None,
+            value_input_option: str = "USER_ENTERED",
+            start_column: Union[str, int] = 1,
+            exact_match: bool = True
+    ) -> bool:
+        """
+        根据条件查找并修改行数据
+
+        参数:
+            filter_column: 用于筛选的列(字母或数字)
+            filter_value: 要匹配的值
+            exact_match: 是否精确匹配(默认True)
+            其他参数同update_row
+
+        返回:
+            是否成功更新
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+
+        # 查找匹配的行
+        row_num = self._find_row_by_value(
+            sheet_name=sheet_name,
+            column=filter_column,
+            value=filter_value,
+            spreadsheet_id=spreadsheet_id,
+            exact_match=exact_match
+        )
+
+        if row_num is None:
+            print("未找到匹配的行")
+            return False
+
+        return self.update_row(
+            sheet_name=sheet_name,
+            row_number=row_num,
+            new_values=new_values,
+            spreadsheet_id=spreadsheet_id,
+            value_input_option=value_input_option,
+            start_column=start_column
+        )
+
+    def _find_row_by_value(
+            self,
+            sheet_name: str,
+            column: Union[str, int],
+            value: Union[str, int, float, bool],
+            spreadsheet_id: str = None,
+            exact_match: bool = True
+    ) -> Optional[int]:
+        """查找包含指定值的行号"""
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+
+        # 获取列数据
+        column_data = self.get_column_data(
+            sheet_name=sheet_name,
+            column=column,
+            spreadsheet_id=spreadsheet_id,
+            skip_header=False,
+            value_render_option="UNFORMATTED_VALUE"
+        )
+
+        # 查找匹配项
+        for i, cell_value in enumerate(column_data, 1):
+            if exact_match:
+                if cell_value == value:
+                    return i
+            else:
+                if str(value).lower() in str(cell_value).lower():
+                    return i
+        return None
+
+    def _column_index_to_letter(self, column_index: int) -> str:
+        """将列索引(1-based)转换为字母"""
+        if column_index < 1:
+            raise ValueError("列索引必须大于0")
+
+        letters = []
+        while column_index > 0:
+            column_index, remainder = divmod(column_index - 1, 26)
+            letters.append(chr(65 + remainder))
+        return ''.join(reversed(letters))
+
+    def _letter_to_column_index(self, column_letter: str) -> int:
+        """将列字母转换为索引(1-based)"""
+        column_letter = column_letter.upper()
+        index = 0
+        for char in column_letter:
+            if not 'A' <= char <= 'Z':
+                raise ValueError("无效的列字母")
+            index = index * 26 + (ord(char) - ord('A') + 1)
+        return index

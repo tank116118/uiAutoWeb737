@@ -131,11 +131,12 @@ class Sheets7:
         cellList[Tools.excelColumnToNumber('AL') - 1] = f'=IFERROR(BC{rowIndex}/B{rowIndex},0)'
 
 
-    def append(self,summary:list[SummaryItem],dateStr:str,totalPay:float):
+    def append(self,summary:list[SummaryItem],dateStr:str,totalPay:float, checkDate:bool= True)->bool:
         # 判断当前日期数据是否存在
-        existDate = self.__gs.date_exists_in_column('Sheet1', 'A', dateStr, weekday_aware=True)
-        if existDate:
-            return
+        if checkDate:
+            existDate = self.__gs.date_exists_in_column('Sheet1', 'A', dateStr, weekday_aware=True)
+            if existDate:
+                return True
 
         rowCount = self.__gs.get_data_row_count('Sheet1')
 
@@ -146,13 +147,29 @@ class Sheets7:
         Sheets7.__fillList(rowCount+1,cellList,summary,dateStr,totalPay)
         isSuccess = self.__gs.append_rows('Sheet1', [cellList])
         if isSuccess:
-            print("追加成功:")
+            print("sheetSete7,追加成功")
+            return True
         else:
-            print("追加失败:")
+            print("sheetSete7,追加失败")
+            return False
 
+    def update(self, summary:list[SummaryItem],dateStr:str,totalPay:float,indexRow):
 
+        length = Tools.excelColumnToNumber('BC')
+        default_value = None  # 可以替换为你想要的初始值
+        cellList = [default_value for _ in range(length)]
 
+        Sheets7.__fillList(indexRow, cellList,summary,dateStr,totalPay)
+        isSuccess = self.__gs.update_row('Sheet1',indexRow,[cellList])
+        if isSuccess:
+            print("sheet737,修改成功")
+            return True
+        else:
+            print("sheet737,修改失败")
+            return False
 
-
-
-
+    def getDateColumn(self)->list:
+        result = self.__gs.get_column_data('Sheet1', 'A', skip_header=True)
+        if result is None or len(result) <= 0:
+            return []
+        return result[1:]

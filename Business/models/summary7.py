@@ -44,7 +44,7 @@ class Operating:
     tCBetScore: int
     tCWinScore: int
     payOrderCash: int
-    payCash: int
+    payCash: int # 充值金额
     withdrawOrderCash: int
     withdrawCash: int
     payUserCount: int

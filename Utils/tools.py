@@ -1,5 +1,7 @@
 
 import base64
+import re
+
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad,pad
 from datetime import datetime, timedelta
@@ -131,3 +133,82 @@ class Tools:
         for c in column:
             num = num * 26 + (ord(c.upper()) - ord('A') + 1)
         return num
+
+    @staticmethod
+    def date_range(start_date, end_date):
+        """
+        生成两个日期之间的每一天
+
+        参数:
+            start_date (str/datetime): 开始日期，格式为 'YYYY-MM-DD' 或 datetime 对象
+            end_date (str/datetime): 结束日期，格式为 'YYYY-MM-DD' 或 datetime 对象
+
+        返回:
+            generator: 生成从开始日期到结束日期的每一天的 datetime 对象
+        """
+        # 如果输入是字符串，转换为 datetime 对象
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+        # 确保开始日期不大于结束日期
+        if start_date > end_date:
+            raise ValueError("开始日期不能晚于结束日期")
+
+        # 计算日期范围
+        current_date = start_date
+        while current_date <= end_date:
+            yield current_date
+            current_date += timedelta(days=1)
+
+    @staticmethod
+    def normalize_date(date_str):
+        # 定义多种可能的日期格式
+        date_formats = [
+            "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y",  # 基础格式
+            "%Y年%m月%d日", "%Y/%m/%d",  # 中文日期格式
+            "%Y-%m-%d %A", "%A, %Y-%m-%d",  # 英文星期格式
+            "%Y年%m月%d日%a", "%Y年%m月%d日%A"  # 中文星期格式
+        ]
+
+        # 尝试用各种格式解析日期
+        for fmt in date_formats:
+            try:
+                # 处理包含星期几的情况(中英文)
+                cleaned_date_str = re.sub(r'[星期周]+[一二三四五六七日天]|[,，]', '', date_str)
+                cleaned_date_str = re.sub(r'(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)', '',
+                                          cleaned_date_str, flags=re.IGNORECASE)
+                cleaned_date_str = re.sub(r'(Mon|Tue|Wed|Thu|Fri|Sat|Sun)', '', cleaned_date_str, flags=re.IGNORECASE)
+
+                # 尝试解析
+                dt = datetime.strptime(cleaned_date_str.strip(), fmt)
+                return dt.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+
+        # 如果所有格式都尝试失败，返回原始字符串或抛出异常
+        return date_str  # 或者 raise ValueError(f"无法解析日期: {date_str}")
+
+    @staticmethod
+    def date_diff(date_str1, date_str2, date_format="%Y-%m-%d"):
+        """
+        计算两个日期字符串之间的天数差
+
+        参数:
+            date_str1: 第一个日期字符串
+            date_str2: 第二个日期字符串
+            date_format: 日期格式(默认为"%Y-%m-%d")
+
+        返回:
+            两个日期之间的天数差(date1 - date2)
+        """
+        # 将字符串转换为日期对象
+        date1 = datetime.strptime(date_str1, date_format)
+        date2 = datetime.strptime(date_str2, date_format)
+
+        # 计算差值
+        delta = date1 - date2
+
+        return delta.days
+
