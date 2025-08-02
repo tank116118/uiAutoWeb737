@@ -36,7 +36,7 @@ class Task(QThread):
 
     def runTask(self):
         self.task737()
-        # self.taskSete7()
+        self.taskSete7()
 
     def taskSete7(self):
         timeNow = datetime.now()
@@ -101,9 +101,19 @@ class Task(QThread):
         dateDiff = Tools.date_diff(dateTo,dateLast)
         summaryList = webSite737.getSummary(page=1, limit=dateDiff + 1)
         lenList = len(summaryList)
+        lenDateColumn = len(self.__dateColumn737)
         for i in range(lenList - 1, -1, -1):
             summary = summaryList[i]
-            if i == lenList - 1:
+
+            date = datetime.fromtimestamp(summary.daytime)
+            dateStr: str = Tools.normalize_date(date.strftime("%Y-%m-%d"))
+            indexRow = 0
+            for j in range(lenDateColumn):
+                if dateStr == self.__dateColumn737[j]:
+                    indexRow = j + 1
+                    break
+
+            if indexRow > 0:
                 indexRow = len(self.__dateColumn737)
                 if not sheets737.update(summary,indexRow+3):
                     break
