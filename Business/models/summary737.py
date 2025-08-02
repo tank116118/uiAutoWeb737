@@ -60,7 +60,7 @@ class Summary:
     first_recharge_fission_user: int = 0
     first_recharge_user: int = 0  # 首充用户
     game_benefit: int = 0
-    gift_coins: int = 0  # 赠送金额
+    gift_coins: int = 0
     issue_coins: int = 0   #现金充值
     login_user: int = 0  #登录用户
     new_user: int = 0  #新增用户

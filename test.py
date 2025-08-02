@@ -112,27 +112,42 @@ from datetime import datetime, timedelta
 
 # if __name__ == "__main__":
 #     # 示例1：使用字符串日期
-#     sheets737 = Sheets737()
-#     webSite737 = WebSite737()
-#     for single_date in date_range('2025-07-30', '2025-07-30'):
+#     sheets7 = Sheets7()
+#     webSite7 = WebSite7()
+#     for single_date in Tools.date_range('2025-06-02', '2025-08-02'):
 #         dateStr = single_date.strftime('%Y-%m-%d')
 #         print(dateStr)
-#         summaryList = webSite737.getSummary(dateStr)
+#         summaryList = webSite7.getSummary(dateStr)
+#         operating = webSite7.getOperating(dateStr)
 #         if summaryList:
-#             sheets737.append(summaryList[0], dateStr)
+#             sheets7.append(summaryList, dateStr,operating.payCash,False)
 #         print('done')
 
 # if __name__ == "__main__":
 #     sheets737 = Sheets737()
 #     webSite737 = WebSite737()
 #
-#     summaryList = webSite737.getSummary(page=1,limit=100)
+#     summaryList = webSite737.getSummary(page=1,limit=1000)
 #     lenList = len(summaryList)
+#     indexRow = 4
 #     for i in range(lenList-1,-1,-1):
 #         summary = summaryList[i]
-#         sheets737.append(summary)
+#         # sheets737.append(summary)
+#         if not sheets737.update(summary,indexRow):
+#             print('修改失败')
+#             break
+#
+#         indexRow += 1
+#         time.sleep(1)
 #         print('done')
 
+from datetime import date, timedelta
+
+today = datetime.strptime('2025-01-01', "%Y-%m-%d").date()
+print("今天:", today)
+
+next_day = str(today + timedelta(days=1))
+print("明天:", next_day)
 
 
 

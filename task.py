@@ -1,6 +1,7 @@
 import json
 import time
 import uuid
+from datetime import datetime, timedelta
 
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -24,6 +25,8 @@ class Task(QThread):
 
         self.__dateColumn7 = []
         self.__dateColumn737 = []
+        self.__timeBefore7 = datetime.now()
+        self.__timeBefore737 = datetime.now()
 
     def __del__(self):
         pass
@@ -33,13 +36,16 @@ class Task(QThread):
 
     def runTask(self):
         self.task737()
-        self.taskSete7()
+        # self.taskSete7()
 
     def taskSete7(self):
+        timeNow = datetime.now()
+        time_diff = timeNow - self.__timeBefore7
+        time_diff_hour = time_diff.total_seconds() / 3600
+
         webSite7 = WebSite7()
         dateLast = Tools.normalize_date(self.__dateColumn7[-1])
-        dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
-        if dateLast == dateTo:
+        if time_diff_hour < 1:
             listItem = webSite7.getSummary(dateLast)
             if listItem:
                 print('sete7 会话有效')
@@ -47,6 +53,10 @@ class Task(QThread):
                 print('sete7 会话失效..')
             return
 
+        self.__timeBefore7 = datetime.now()
+
+        today = datetime.now().date()
+        dateTo = str(today + timedelta(days=1))
         sheets7 = Sheets7()
         for single_date in Tools.date_range(dateLast, dateTo):
             dateStr = single_date.strftime('%Y-%m-%d')
@@ -66,17 +76,26 @@ class Task(QThread):
 
         self.__dateColumn7 = sheets7.getDateColumn()
 
+
     def task737(self):
+        timeNow = datetime.now()
+        time_diff = timeNow - self.__timeBefore737
+        time_diff_hour = time_diff.total_seconds() / 3600
+
         webSite737 = WebSite737()
         dateLast = Tools.normalize_date(self.__dateColumn737[-1])
-        dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
-        if dateLast == dateTo:
+        if time_diff_hour < 1:
             listItem = webSite737.getSummary(page=1)
             if listItem:
                 print('737 会话有效')
             else:
                 print('737 会话失效..')
             return
+
+        self.__timeBefore737 = datetime.now()
+
+        today = datetime.now().date()
+        dateTo = str(today + timedelta(days=1))
 
         sheets737 = Sheets737()
         dateDiff = Tools.date_diff(dateTo,dateLast)

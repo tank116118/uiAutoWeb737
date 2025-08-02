@@ -28,6 +28,19 @@ class Sheets737:
                 return 0
             return value / 100
 
+        #计算赠送金额
+        giftAmount = 0
+        for k in dir(summary.gift_coins_detail):
+            # 排除私有成员
+            if k.startswith('__'):
+                continue
+            attr = getattr(summary.gift_coins_detail, k)
+            # 排除方法
+            if callable(attr):
+                continue
+            giftAmount += attr
+        giftAmount += summary.commission
+
         cellList[Tools.excelColumnToNumber('BO') - 1] = summary.visit_ip
         cellList[Tools.excelColumnToNumber('BP') - 1] = summary.login_user
         cellList[Tools.excelColumnToNumber('BQ') - 1] = summary.new_user
@@ -43,7 +56,7 @@ class Sheets737:
         cellList[Tools.excelColumnToNumber('CA') - 1] = DivideBy100(summary.total_recharge - summary.total_withdraw)
         cellList[Tools.excelColumnToNumber('CB') - 1] = DivideBy100(summary.withdraw_commission)
         cellList[Tools.excelColumnToNumber('CC') - 1] = DivideBy100(summary.total_coins)
-        cellList[Tools.excelColumnToNumber('CD') - 1] = DivideBy100(summary.gift_coins)
+        cellList[Tools.excelColumnToNumber('CD') - 1] = DivideBy100(giftAmount) # 错误
         cellList[Tools.excelColumnToNumber('CE') - 1] = DivideBy100(summary.commission)
         cellList[Tools.excelColumnToNumber('CF') - 1] = DivideBy100(summary.gift_coins_detail.cashback_newuser)
         cellList[Tools.excelColumnToNumber('CG') - 1] = DivideBy100(summary.gift_coins_detail.cashback_activeuser)
@@ -51,7 +64,7 @@ class Sheets737:
         cellList[Tools.excelColumnToNumber('CI') - 1] = DivideBy100(summary.gift_coins_detail.recharge_gift)
         cellList[Tools.excelColumnToNumber('CJ') - 1] = DivideBy100(summary.gift_coins_detail.user_rank)
         cellList[Tools.excelColumnToNumber('CK') - 1] = DivideBy100(summary.gift_coins_detail.fucard_reward)
-        cellList[Tools.excelColumnToNumber('CL') - 1] = DivideBy100(summary.gift_coins_detail.fucard_reward)
+        cellList[Tools.excelColumnToNumber('CL') - 1] = DivideBy100(summary.gift_coins_detail.fucard_exchange)
         cellList[Tools.excelColumnToNumber('CM') - 1] = DivideBy100(summary.act_consume_detail.pf_purchase)
         cellList[Tools.excelColumnToNumber('CN') - 1] = DivideBy100(summary.gift_coins_detail.pf_reward)
         cellList[Tools.excelColumnToNumber('CO') - 1] = DivideBy100(summary.gift_coins_detail.member_day)
@@ -167,18 +180,18 @@ class Sheets737:
 
         # 判断当前日期数据是否存在
         if checkDate:
-            existDate = self.__gs.date_exists_in_column('Sheet1', 'A', dateStr, weekday_aware=True)
+            existDate = self.__gs.date_exists_in_column('Sheet737', 'A', dateStr, weekday_aware=True)
             if existDate:
                 return True
 
-        rowCount = self.__gs.get_data_row_count('Sheet1')
+        rowCount = self.__gs.get_data_row_count('Sheet737')
 
         length = Tools.excelColumnToNumber('DL')
         default_value = None  # 可以替换为你想要的初始值
         cellList = [default_value for _ in range(length)]
 
         Sheets737.__fillList(rowCount + 1, cellList, summary, dateStr)
-        isSuccess = self.__gs.append_rows('Sheet1', [cellList])
+        isSuccess = self.__gs.append_rows('Sheet737', [cellList])
         if isSuccess:
             print("sheet737,追加成功")
             return True
@@ -195,8 +208,7 @@ class Sheets737:
         cellList = [default_value for _ in range(length)]
 
         Sheets737.__fillList(indexRow, cellList, summary, dateStr)
-        isSuccess = self.__gs.update_row('Sheet1',indexRow,[cellList],start_column=1)
-        # isSuccess = self.__gs.update_row('Sheet1', indexRow, [['2025-07-30']])
+        isSuccess = self.__gs.update_row('Sheet737',indexRow,[cellList],start_column=1)
         if isSuccess:
             print("sheet737,修改成功")
             return True
@@ -205,7 +217,7 @@ class Sheets737:
             return False
 
     def getDateColumn(self)->list:
-        result = self.__gs.get_column_data('Sheet1','A',skip_header=True)
+        result = self.__gs.get_column_data('Sheet737','A',skip_header=True)
         if result is None or len(result) <= 0:
             return []
         return result[1:]

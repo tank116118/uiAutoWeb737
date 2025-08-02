@@ -1,9 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('./Static', './Static'), ('C:/Users/Admin/AppData/Local/ms-playwright', './playwright/driver/package/.local-browsers')]
+datas = [('./Static', './Static')]
 binaries = []
-hiddenimports = ['Business.controller.telegram.accountCtrl', 'Business.controller.telegram.groupCtrl', 'Business.controller.telegram.robotCtrl', 'Business.controller.whatsapp.accountCtrl', 'Business.controller.whatsapp.groupCtrl', 'Business.controller.google.accountCtrl']
+hiddenimports = []
 tmp_ret = collect_all('poetry')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
