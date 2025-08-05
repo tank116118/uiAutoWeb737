@@ -3,7 +3,7 @@ import re
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from datetime import datetime, date, timedelta
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 from googleapiclient.errors import HttpError
 
 
@@ -63,29 +63,133 @@ class GoogleSheets:
             self,
             range_name: str,
             spreadsheet_id: str = None,
-            major_dimension: str = "ROWS"
-    ) -> List[List[str]]:
+            major_dimension: str = "ROWS",
+            include_formulas: bool = False,
+            value_render_option: str = "FORMATTED_VALUE",
+            unformatted: bool = False
+    ) -> Union[List[List[str]], Dict[str, Union[List[List[str]], List[List[str]]]]]:
         """
-        读取指定范围的数据
+                读取指定范围的数据，支持获取公式
 
-        :param range_name: 范围名称，例如 'Sheet1!A1:C10'
-        :param spreadsheet_id: 电子表格 ID，如果未提供则使用默认值
-        :param major_dimension: 主要维度，"ROWS" 或 "COLUMNS"
-        :return: 二维数据列表
-        """
+                参数:
+                    range_name: 范围名称(如 'Sheet1!A1:C10')
+                    spreadsheet_id: 电子表格ID(可选)
+                    major_dimension:
+                        "ROWS" - 按行组织数据(默认)
+                        "COLUMNS" - 按列组织数据
+                    include_formulas: 是否同时返回公式(默认False)
+                    value_render_option:
+                        "FORMATTED_VALUE" - 返回格式化字符串(默认)
+                        "UNFORMATTED_VALUE" - 返回原始值
+                        "FORMULA" - 返回公式
+                    unformatted: 是否返回未格式化的数字/日期(覆盖value_render_option)
+
+                返回:
+                    如果 include_formulas=False: 二维数据列表
+                    如果 include_formulas=True: 字典 {
+                        "values": 二维值列表,
+                        "formulas": 二维公式列表(空字符串表示无公式)
+                    }
+                """
         spreadsheet_id = spreadsheet_id or self.spreadsheet_id
         if not spreadsheet_id:
             raise ValueError("未提供 spreadsheet_id")
 
+        # 处理未格式化请求
+        if unformatted:
+            value_render_option = "UNFORMATTED_VALUE"
+
         try:
+            # 基本数据请求
             result = self.service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                majorDimension=major_dimension
+                majorDimension=major_dimension,
+                valueRenderOption=value_render_option
             ).execute()
-            return result.get('values', [])
+
+            values = result.get('values', [])
+
+            # 如果不需公式，直接返回
+            if not include_formulas:
+                return values
+
+            # 如果需要公式，发起第二个请求获取公式
+            formula_result = self.service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                majorDimension=major_dimension,
+                valueRenderOption="FORMULA"
+            ).execute()
+
+            formulas = formula_result.get('values', [])
+
+            # 确保两个结果维度相同
+            if len(values) != len(formulas):
+                print("警告: 值和公式结果维度不匹配")
+                formulas = [[""] * len(row) for row in values]
+            else:
+                for i in range(len(values)):
+                    if len(values[i]) != len(formulas[i]):
+                        formulas[i] = formulas[i] + [""] * (len(values[i]) - len(formulas[i]))
+
+            return {
+                "values": values,
+                "formulas": formulas
+            }
+
         except HttpError as error:
-            print(f"发生错误: {error}")
+            print(f"读取范围时发生错误: {error}")
+            return [] if not include_formulas else {"values": [], "formulas": []}
+
+    def read_range_with_metadata(
+            self,
+            range_name: str,
+            spreadsheet_id: str = None
+    ) -> List[List[Dict[str, Union[str, dict]]]]:
+        """
+                读取范围数据及完整元数据(包括值、公式、格式等)
+
+                返回:
+                    二维字典列表，每个单元格包含:
+                    {
+                        "value": 显示值,
+                        "formula": 公式(若无则为None),
+                        "format": 格式字典,
+                        "note": 单元格注释
+                    }
+                """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+
+        try:
+            result = self.service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                ranges=[range_name],
+                includeGridData=True,
+                fields="sheets(data(rowData(values(effectiveValue,formattedValue,userEnteredValue,userEnteredFormat,note)))"
+            ).execute()
+
+            sheet_data = result['sheets'][0]['data'][0]
+            row_data = sheet_data.get('rowData', [])
+
+            grid = []
+            for row in row_data:
+                row_cells = []
+                for cell in row.get('values', []):
+                    cell_info = {
+                        "value": cell.get('formattedValue'),
+                        "raw_value": cell.get('effectiveValue'),
+                        "formula": cell.get('userEnteredValue', {}).get('formulaValue'),
+                        "format": cell.get('userEnteredFormat', {}),
+                        "note": cell.get('note')
+                    }
+                    row_cells.append(cell_info)
+                grid.append(row_cells)
+
+            return grid
+
+        except HttpError as error:
+            print(f"获取元数据时发生错误: {error}")
             return []
 
     def write_range(
@@ -257,6 +361,378 @@ class GoogleSheets:
         except HttpError as error:
             print(f"发生错误: {error}")
             return None
+
+    def insert_column(
+            self,
+            sheet_name: str,
+            column: Union[str, int],
+            values: Optional[List[Union[str, int, float, bool]]] = None,
+            spreadsheet_id: str = None,
+            insert_position: str = "after",  # "before" 或 "after"
+            inherit_from_before: bool = False,
+            clear_content: bool = False
+    ) -> bool:
+        """
+        在工作表中插入新列
+
+        参数:
+            sheet_name: 工作表名称
+            column: 列字母(如"A")或列索引(1-based)，新列将插入到此列前/后
+            values: 可选，要插入的数据列表
+            spreadsheet_id: 可选，指定电子表格ID
+            insert_position:
+                "before" - 插入到指定列前
+                "after" - 插入到指定列后(默认)
+            inherit_from_before: 是否从左侧列继承格式(默认False)
+            clear_content: 是否清空插入列的内容(默认False)
+
+        返回:
+            是否成功插入
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        # 获取工作表ID
+        sheet_id = self._get_sheet_id(sheet_name, spreadsheet_id)
+        if sheet_id is None:
+            print(f"找不到工作表: {sheet_name}")
+            return False
+
+        # 转换列索引为数字
+        if isinstance(column, str):
+            column_index = self.letter_to_column_index(column)
+        else:
+            if column < 1:
+                raise ValueError("列索引必须大于0")
+            column_index = column
+
+        # 调整插入位置
+        if insert_position == "after":
+            column_index += 1
+
+        # 构造请求
+        requests = [{
+            "insertDimension": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "dimension": "COLUMNS",
+                    "startIndex": column_index - 1,  # 0-based
+                    "endIndex": column_index  # 插入一列
+                },
+                "inheritFromBefore": inherit_from_before
+            }
+        }]
+
+        # 如果需要清空内容
+        if clear_content:
+            requests.append({
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startColumnIndex": column_index - 1,
+                        "endColumnIndex": column_index,
+                        "dimension": "COLUMNS"
+                    },
+                    "fields": "userEnteredValue"
+                }
+            })
+
+        try:
+            # 执行插入列操作
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={"requests": requests}
+            ).execute()
+
+            # 如果有数据要写入
+            if values:
+                new_column_letter = self.column_index_to_letter(column_index)
+                range_name = f"{sheet_name}!{new_column_letter}1:{new_column_letter}{len(values)}"
+
+                self.service.spreadsheets().values().update(
+                    spreadsheetId=spreadsheet_id,
+                    range=range_name,
+                    valueInputOption="USER_ENTERED",
+                    body={"values": [[v] for v in values]}  # 转换为二维数组
+                ).execute()
+
+            return True
+
+        except HttpError as error:
+            print(f"插入列时发生错误: {error}")
+            return False
+
+    def insert_columns(
+            self,
+            sheet_name: str,
+            column: Union[str, int],
+            num_columns: int = 1,
+            spreadsheet_id: str = None,
+            insert_position: str = "after",
+            inherit_from_before: bool = False,
+            clear_content: bool = False
+    ) -> bool:
+        """
+        批量插入多列
+
+        参数:
+            num_columns: 要插入的列数
+            其他参数同insert_column
+
+        返回:
+            是否成功插入
+        """
+        if num_columns < 1:
+            raise ValueError("插入列数必须大于0")
+
+        # 插入多列实际上是多次插入单列(因为插入位置会变化)
+        success = True
+        for i in range(num_columns):
+            # 第一次插入在指定位置，后续插入在前一次插入的列后
+            if i == 0:
+                current_col = column
+            else:
+                if isinstance(column, str):
+                    current_col = self.column_index_to_letter(
+                        self.letter_to_column_index(column) + i
+                    )
+                else:
+                    current_col = column + i
+
+            if not self.insert_column(
+                    sheet_name=sheet_name,
+                    column=current_col,
+                    spreadsheet_id=spreadsheet_id,
+                    insert_position=insert_position,
+                    inherit_from_before=inherit_from_before,
+                    clear_content=clear_content
+            ):
+                success = False
+
+        return success
+
+    def _get_sheet_id(self, sheet_name: str, spreadsheet_id: str) -> Optional[int]:
+        """获取工作表的ID"""
+        try:
+            spreadsheet = self.service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                fields="sheets(properties(sheetId,title))"
+            ).execute()
+
+            for sheet in spreadsheet.get('sheets', []):
+                if sheet['properties']['title'] == sheet_name:
+                    return sheet['properties']['sheetId']
+            return None
+        except HttpError:
+            return None
+
+    def merge_cells(
+            self,
+            sheet_name: str,
+            range_str: Optional[str] = None,
+            start_row: Optional[int] = None,
+            end_row: Optional[int] = None,
+            start_col: Optional[Union[str, int]] = None,
+            end_col: Optional[Union[str, int]] = None,
+            spreadsheet_id: str = None,
+            merge_type: str = "MERGE_ALL"  # "MERGE_ALL", "MERGE_COLUMNS", "MERGE_ROWS"
+    ) -> bool:
+        """
+        合并指定范围的单元格
+
+        参数:
+            sheet_name: 工作表名称
+            range_str: 范围字符串(如"A1:C3")，优先使用此参数
+            start_row: 起始行号(1-based)
+            end_row: 结束行号
+            start_col: 起始列(字母或数字)
+            end_col: 结束列
+            spreadsheet_id: 可选，指定电子表格ID
+            merge_type:
+                "MERGE_ALL" - 合并所有单元格为一个(默认)
+                "MERGE_COLUMNS" - 按列合并
+                "MERGE_ROWS" - 按行合并
+
+        返回:
+            是否成功合并
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        # 获取工作表ID
+        sheet_id = self._get_sheet_id(sheet_name, spreadsheet_id)
+        if sheet_id is None:
+            print(f"找不到工作表: {sheet_name}")
+            return False
+
+        # 处理范围参数
+        if range_str:
+            # 解析范围字符串
+            range_parts = self._parse_range(range_str)
+            start_row = range_parts["start_row"]
+            end_row = range_parts["end_row"]
+            start_col_idx = range_parts["start_col"]
+            end_col_idx = range_parts["end_col"]
+        else:
+            # 验证手动指定的范围参数
+            if None in (start_row, end_row, start_col, end_col):
+                raise ValueError("必须提供range_str或完整的start/end行列参数")
+
+            # 转换列格式
+            if isinstance(start_col, str):
+                start_col_idx = self.letter_to_column_index(start_col)
+            else:
+                start_col_idx = start_col
+
+            if isinstance(end_col, str):
+                end_col_idx = self.letter_to_column_index(end_col)
+            else:
+                end_col_idx = end_col
+
+        # 构造合并请求
+        merge_type_enum = {
+            "MERGE_ALL": "MERGE_ALL",
+            "MERGE_COLUMNS": "MERGE_COLUMNS",
+            "MERGE_ROWS": "MERGE_ROWS"
+        }.get(merge_type.upper(), "MERGE_ALL")
+
+        request = {
+            "mergeCells": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": start_row - 1,  # 转换为0-based
+                    "endRowIndex": end_row,
+                    "startColumnIndex": start_col_idx - 1,
+                    "endColumnIndex": end_col_idx
+                },
+                "mergeType": merge_type_enum
+            }
+        }
+
+        try:
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={"requests": [request]}
+            ).execute()
+            return True
+        except HttpError as error:
+            print(f"合并单元格时发生错误: {error}")
+            return False
+
+    def _parse_range(self, range_str: str) -> dict:
+        """
+        解析范围字符串(如"Sheet1!A1:C3"或"A1:C3")
+        返回包含行列信息的字典
+        """
+        # 移除工作表名部分(如果有)
+        if '!' in range_str:
+            range_part = range_str.split('!')[1]
+        else:
+            range_part = range_str
+
+        # 分割起始和结束位置
+        if ':' in range_part:
+            start_ref, end_ref = range_part.split(':')
+        else:
+            start_ref = end_ref = range_part
+
+        # 解析起始位置
+        start_col_str = ''.join(filter(str.isalpha, start_ref))
+        start_row = int(''.join(filter(str.isdigit, start_ref)))
+        start_col = self.letter_to_column_index(start_col_str)
+
+        # 解析结束位置
+        end_col_str = ''.join(filter(str.isalpha, end_ref))
+        end_row = int(''.join(filter(str.isdigit, end_ref)))
+        end_col = self.letter_to_column_index(end_col_str)
+
+        return {
+            "start_row": start_row,
+            "end_row": end_row,
+            "start_col": start_col,
+            "end_col": end_col,
+            "start_col_letter": start_col_str,
+            "end_col_letter": end_col_str
+        }
+
+    def get_column_count(
+            self,
+            sheet_name: str,
+            spreadsheet_id: str = None,
+            include_empty: bool = False
+    ) -> int:
+        """
+        获取指定工作表中的总列数
+
+        参数:
+            sheet_name: 工作表名称
+            spreadsheet_id: 可选，指定电子表格ID
+            include_empty: 是否包含空列(默认False，只计算有数据的列)
+
+        返回:
+            列数(整数)，出错返回0
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        try:
+            # 获取工作表属性
+            result = self.service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                ranges=[f"{sheet_name}"],
+                includeGridData=include_empty,
+                fields="sheets(properties(gridProperties(columnCount)))"
+            ).execute()
+
+            # 提取列数信息
+            sheet_props = result.get('sheets', [{}])[0].get('properties', {})
+            grid_props = sheet_props.get('gridProperties', {})
+            return grid_props.get('columnCount', 0)
+
+        except HttpError as error:
+            print(f"获取列数时发生错误: {error}")
+            return 0
+
+    def get_used_column_count(
+            self,
+            sheet_name: str,
+            spreadsheet_id: str = None
+    ) -> int:
+        """
+        获取工作表中有数据的列数(基于内容)
+
+        参数:
+            sheet_name: 工作表名称
+            spreadsheet_id: 可选，指定电子表格ID
+
+        返回:
+            有数据的列数(整数)
+        """
+        spreadsheet_id = spreadsheet_id or self.spreadsheet_id
+        if not spreadsheet_id:
+            raise ValueError("未提供 spreadsheet_id")
+
+        try:
+            # 获取整个工作表的数据范围
+            result = self.service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=f"{sheet_name}",
+                majorDimension="ROWS"
+            ).execute()
+
+            values = result.get('values', [])
+            if not values:
+                return 0
+
+            # 返回第一行的列数(假设第一行代表完整列结构)
+            return len(values[0])
+
+        except HttpError as error:
+            print(f"获取使用列数时发生错误: {error}")
+            return 0
 
     def date_exists_in_column(
             self,
@@ -510,7 +986,7 @@ class GoogleSheets:
         if isinstance(column, int):
             if column < 1:
                 raise ValueError("列索引必须大于0")
-            column = self._column_index_to_letter(column)
+            column = self.column_index_to_letter(column)
 
         range_name = f"{sheet_name}!{column}:{column}"
 
@@ -556,7 +1032,7 @@ class GoogleSheets:
 
         # 转换列索引为字母
         if isinstance(column, int):
-            column = self._column_index_to_letter(column)
+            column = self.column_index_to_letter(column)
 
         range_name = f"{sheet_name}!{column}:{column}"
 
@@ -619,10 +1095,10 @@ class GoogleSheets:
 
         # 转换列索引为字母
         if isinstance(start_column, int):
-            start_column = self._column_index_to_letter(start_column)
+            start_column = self.column_index_to_letter(start_column)
 
         # 构造范围(如 "Sheet1!A2:C2")
-        range_name = f"{sheet_name}!{start_column}{row_number}:{self._column_index_to_letter(len(new_values[0]) + self._letter_to_column_index(start_column) - 1)}{row_number}"
+        range_name = f"{sheet_name}!{start_column}{row_number}:{self.column_index_to_letter(len(new_values[0]) + self.letter_to_column_index(start_column) - 1)}{row_number}"
 
         try:
             body = {
@@ -719,7 +1195,8 @@ class GoogleSheets:
                     return i
         return None
 
-    def _column_index_to_letter(self, column_index: int) -> str:
+    @staticmethod
+    def column_index_to_letter(column_index: int) -> str:
         """将列索引(1-based)转换为字母"""
         if column_index < 1:
             raise ValueError("列索引必须大于0")
@@ -730,7 +1207,8 @@ class GoogleSheets:
             letters.append(chr(65 + remainder))
         return ''.join(reversed(letters))
 
-    def _letter_to_column_index(self, column_letter: str) -> int:
+    @staticmethod
+    def letter_to_column_index(column_letter: str) -> int:
         """将列字母转换为索引(1-based)"""
         column_letter = column_letter.upper()
         index = 0

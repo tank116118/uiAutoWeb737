@@ -1,34 +1,39 @@
+import time
 from datetime import datetime
 
+from Business.models.sheetStructItem import SheetStructItem
 from Business.models.summary737 import Summary
 from Utils.tools import Tools
 from paths import getProjectPath
 from Utils.googleSheets import GoogleSheets
 class Sheets737:
+    __sheetStructList:list[SheetStructItem] = None
+
     def __init__(self):
         projectPath = getProjectPath()
         CREDENTIALS_FILE = f'{projectPath}Static/autobotchats-4c5cfe7df47e.json'
         SPREADSHEET_ID = '13QPgO93klnr4KTckiZuozY6wBahUkbLnRBoUdKiR72c'
+        SPREADSHEET_ID_TEMPLATE = '1snBjPsrS12rXO3Kkcye6uzezRO81ILeyqzXNtXldl5w'
+        self.__sheetName = 'Sheet737'
         self.__gs = GoogleSheets(CREDENTIALS_FILE, SPREADSHEET_ID)
+        self.__gs_temp = GoogleSheets(CREDENTIALS_FILE, SPREADSHEET_ID_TEMPLATE)
+        if Sheets737.__sheetStructList is None:
+            Sheets737.__sheetStructList = self.getSheetStruct()
 
-    @staticmethod
-    def __fillList(rowIndex: int, cellList: list, summary: Summary, dateStr: str):
-        totalGiftAmount: float = 0
-
+    def __fillList(self,rowIndex: int, cellList: list, summary: Summary, dateStr: str):
         # 初始化
-        indexFrom = Tools.excelColumnToNumber('BO') - 1
-        indexTo = Tools.excelColumnToNumber('DL') - 1
-        for i in range(indexFrom, indexTo + 1):
-            cellList[i] = 0
-
-        def DivideBy100(value:int|float)->float:
-            if value is None:
+        def DivideBy100(valueParam: int | float) -> float:
+            if valueParam is None:
                 return 0
-            if value == 0:
+            if valueParam == 0:
                 return 0
-            return value / 100
+            return valueParam / 100
 
-        #计算赠送金额
+        valuesDict = {
+            "dateStr":dateStr
+        }
+
+        # 计算赠送金额
         giftAmount = 0
         for k in dir(summary.gift_coins_detail):
             # 排除私有成员
@@ -38,141 +43,53 @@ class Sheets737:
             # 排除方法
             if callable(attr):
                 continue
+
+            valuesDict[k] = attr
             giftAmount += attr
+
         giftAmount += summary.commission
+        diffRechargeAndWithdraw = summary.total_recharge - summary.total_withdraw
+        valuesDict['giftAmount'] = giftAmount
+        valuesDict['diffRechargeAndWithdraw'] = diffRechargeAndWithdraw
 
-        cellList[Tools.excelColumnToNumber('BO') - 1] = summary.visit_ip
-        cellList[Tools.excelColumnToNumber('BP') - 1] = summary.login_user
-        cellList[Tools.excelColumnToNumber('BQ') - 1] = summary.new_user
-        cellList[Tools.excelColumnToNumber('BR') - 1] = summary.bet_user
-        cellList[Tools.excelColumnToNumber('BS') - 1] = summary.first_recharge_user
-        cellList[Tools.excelColumnToNumber('BT') - 1] = summary.recharge_user
-        cellList[Tools.excelColumnToNumber('BU') - 1] = DivideBy100(summary.first_recharge_coins)
-        cellList[Tools.excelColumnToNumber('BV') - 1] = DivideBy100(summary.total_bet)
-        cellList[Tools.excelColumnToNumber('BW') - 1] = DivideBy100(summary.system_score)
-        cellList[Tools.excelColumnToNumber('BX') - 1] = DivideBy100(summary.issue_coins)
-        cellList[Tools.excelColumnToNumber('BY') - 1] = DivideBy100(summary.total_recharge)
-        cellList[Tools.excelColumnToNumber('BZ') - 1] = DivideBy100(summary.total_withdraw)
-        cellList[Tools.excelColumnToNumber('CA') - 1] = DivideBy100(summary.total_recharge - summary.total_withdraw)
-        cellList[Tools.excelColumnToNumber('CB') - 1] = DivideBy100(summary.withdraw_commission)
-        cellList[Tools.excelColumnToNumber('CC') - 1] = DivideBy100(summary.total_coins)
-        cellList[Tools.excelColumnToNumber('CD') - 1] = DivideBy100(giftAmount) # 错误
-        cellList[Tools.excelColumnToNumber('CE') - 1] = DivideBy100(summary.commission)
-        cellList[Tools.excelColumnToNumber('CF') - 1] = DivideBy100(summary.gift_coins_detail.cashback_newuser)
-        cellList[Tools.excelColumnToNumber('CG') - 1] = DivideBy100(summary.gift_coins_detail.cashback_activeuser)
-        cellList[Tools.excelColumnToNumber('CH') - 1] = DivideBy100(summary.gift_coins_detail.cashback_recharge)
-        cellList[Tools.excelColumnToNumber('CI') - 1] = DivideBy100(summary.gift_coins_detail.recharge_gift)
-        cellList[Tools.excelColumnToNumber('CJ') - 1] = DivideBy100(summary.gift_coins_detail.user_rank)
-        cellList[Tools.excelColumnToNumber('CK') - 1] = DivideBy100(summary.gift_coins_detail.fucard_reward)
-        cellList[Tools.excelColumnToNumber('CL') - 1] = DivideBy100(summary.gift_coins_detail.fucard_exchange)
-        cellList[Tools.excelColumnToNumber('CM') - 1] = DivideBy100(summary.act_consume_detail.pf_purchase)
-        cellList[Tools.excelColumnToNumber('CN') - 1] = DivideBy100(summary.gift_coins_detail.pf_reward)
-        cellList[Tools.excelColumnToNumber('CO') - 1] = DivideBy100(summary.gift_coins_detail.member_day)
-        cellList[Tools.excelColumnToNumber('CP') - 1] = DivideBy100(summary.gift_coins_detail.fish_reward)
-        cellList[Tools.excelColumnToNumber('CQ') - 1] = DivideBy100(summary.gift_coins_detail.game_benefit)
-        cellList[Tools.excelColumnToNumber('CR') - 1] = DivideBy100(summary.gift_coins_detail.week_benefit)
-        cellList[Tools.excelColumnToNumber('CS') - 1] = DivideBy100(summary.gift_coins_detail.red_envelope_rain)
-        cellList[Tools.excelColumnToNumber('CT') - 1] = DivideBy100(summary.gift_coins_detail.vip_reward)
-        cellList[Tools.excelColumnToNumber('CU') - 1] = DivideBy100(summary.gift_coins_detail.pwa_reward)
-        cellList[Tools.excelColumnToNumber('CV') - 1] = DivideBy100(summary.gift_coins_detail.first_recharge)
-        cellList[Tools.excelColumnToNumber('CW') - 1] = DivideBy100(summary.gift_coins_detail.pdd_reward)
-        cellList[Tools.excelColumnToNumber('CX') - 1] = DivideBy100(summary.gift_coins_detail.total_recharge_reward)
-        cellList[Tools.excelColumnToNumber('CY') - 1] = DivideBy100(summary.gift_coins_detail.redeem_code)
-        cellList[Tools.excelColumnToNumber('CZ') - 1] = DivideBy100(summary.gift_coins_detail.jackpot)
-        cellList[Tools.excelColumnToNumber('DA') - 1] = DivideBy100(summary.gift_coins_detail.mystery)
-        cellList[Tools.excelColumnToNumber('DB') - 1] = DivideBy100(summary.gift_coins_detail.box_reward)
-        cellList[Tools.excelColumnToNumber('DC') - 1] = DivideBy100(summary.gift_coins_detail.blind_box_reward)
-        cellList[Tools.excelColumnToNumber('DD') - 1] = DivideBy100(summary.gift_coins_detail.pwa_convert_reward)
-        cellList[Tools.excelColumnToNumber('DE') - 1] = DivideBy100(summary.gift_coins_detail.wash_chip)
-        cellList[Tools.excelColumnToNumber('DF') - 1] = DivideBy100(summary.gift_coins_detail.global_wash_chip)
-        cellList[Tools.excelColumnToNumber('DG') - 1] = DivideBy100(summary.gift_coins_detail.recharge_bargain_sales)
-        cellList[Tools.excelColumnToNumber('DH') - 1] = DivideBy100(summary.gift_coins_detail.super_bet_day_reward)
-        cellList[Tools.excelColumnToNumber('DI') - 1] = DivideBy100(summary.gift_coins_detail.sevenday_cashback_reward)
-        cellList[Tools.excelColumnToNumber('DJ') - 1] = DivideBy100(summary.gift_coins_detail.active_bonus_reward)
-        cellList[Tools.excelColumnToNumber('DK') - 1] = DivideBy100(summary.gift_coins_detail.mystery_task_reward)
-        cellList[Tools.excelColumnToNumber('DL') - 1] = DivideBy100(summary.gift_coins_detail.lucky_wheel_reward)
+        for k in dir(summary.act_consume_detail):
+            # 排除私有成员
+            if k.startswith('__'):
+                continue
+            attr = getattr(summary.act_consume_detail, k)
+            # 排除方法
+            if callable(attr):
+                continue
 
-        # 日期
-        cellList[Tools.excelColumnToNumber('A') - 1] = dateStr
-        # 赠送总额
-        cellList[Tools.excelColumnToNumber('B') - 1] = DivideBy100(summary.gift_coins)
-        cellList[Tools.excelColumnToNumber('C') - 1] = DivideBy100(summary.total_recharge)
+            valuesDict[k] = attr
 
-        # 统计
-        cellList[Tools.excelColumnToNumber('D') - 1] = f'=IFERROR(B{rowIndex}/C{rowIndex},0)'
+        for k in dir(summary):
+            # 排除私有成员
+            if k.startswith('__'):
+                continue
+            if k == 'gift_coins_detail' or k == 'act_consume_detail':
+                continue
 
-        cellList[Tools.excelColumnToNumber('E') - 1] = f'=IFERROR(CE{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('F') - 1] = f'=IFERROR(CE{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('G') - 1] = f'=IFERROR(CF{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('H') - 1] = f'=IFERROR(CF{rowIndex}/B{rowIndex},0)'
+            attr = getattr(summary, k)
+            # 排除方法
+            if callable(attr):
+                continue
 
-        cellList[Tools.excelColumnToNumber('I') - 1] = f'=IFERROR(CG{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('J') - 1] = f'=IFERROR(CG{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('K') - 1] = f'=IFERROR(CH{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('L') - 1] = f'=IFERROR(CH{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('M') - 1] = f'=IFERROR(CI{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('N') - 1] = f'=IFERROR(CI{rowIndex}/B{rowIndex},0)'
+            valuesDict[k] = attr
 
-        cellList[Tools.excelColumnToNumber('O') - 1] = f'=IFERROR(CJ{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('P') - 1] = f'=IFERROR(CJ{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('Q') - 1] = f'=IFERROR(CK{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('R') - 1] = f'=IFERROR(CK{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('S') - 1] = f'=IFERROR(CL{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('T') - 1] = f'=IFERROR(CL{rowIndex}/B{rowIndex},0)'
+        # 填充数据
+        lenStruct = len(Sheets737.__sheetStructList)
+        for i in range(lenStruct):
+            struct = Sheets737.__sheetStructList[i]
+            if struct.variableName:
+                value:int|float|str = valuesDict.get(struct.variableName)
+                if struct.conversionFunction == 'DivideBy100':
+                    cellList[i] = DivideBy100(value)
+                else:
+                    cellList[i] = value
+            elif struct.function:
+                cellList[i] = struct.function.replace('4',str(rowIndex))
 
-        cellList[Tools.excelColumnToNumber('U') - 1] = f'=IFERROR(CM{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('V') - 1] = f'=IFERROR(CM{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('W') - 1] = f'=IFERROR(CN{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('X') - 1] = f'=IFERROR(CN{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('Y') - 1] = f'=IFERROR(CO{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('Z') - 1] = f'=IFERROR(CO{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('AA') - 1] = f'=IFERROR(CP{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AB') - 1] = f'=IFERROR(CP{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AC') - 1] = f'=IFERROR(CQ{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AD') - 1] = f'=IFERROR(CQ{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AE') - 1] = f'=IFERROR(CR{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AF') - 1] = f'=IFERROR(CR{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('AG') - 1] = f'=IFERROR(CS{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AH') - 1] = f'=IFERROR(CS{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AI') - 1] = f'=IFERROR(CT{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AJ') - 1] = f'=IFERROR(CT{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AK') - 1] = f'=IFERROR(CU{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AL') - 1] = f'=IFERROR(CU{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('AM') - 1] = f'=IFERROR(CV{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AN') - 1] = f'=IFERROR(CV{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AO') - 1] = f'=IFERROR(CW{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AP') - 1] = f'=IFERROR(CW{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AQ') - 1] = f'=IFERROR(CX{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AR') - 1] = f'=IFERROR(CX{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('AS') - 1] = f'=IFERROR(CY{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AT') - 1] = f'=IFERROR(CY{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AU') - 1] = f'=IFERROR(CZ{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AV') - 1] = f'=IFERROR(CZ{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AW') - 1] = f'=IFERROR(DA{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AX') - 1] = f'=IFERROR(DA{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('AY') - 1] = f'=IFERROR(DB{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('AZ') - 1] = f'=IFERROR(DB{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BA') - 1] = f'=IFERROR(DC{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BB') - 1] = f'=IFERROR(DC{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BC') - 1] = f'=IFERROR(DG{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BD') - 1] = f'=IFERROR(DG{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('BE') - 1] = f'=IFERROR(DH{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BF') - 1] = f'=IFERROR(DH{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BG') - 1] = f'=IFERROR(DI{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BH') - 1] = f'=IFERROR(DI{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BI') - 1] = f'=IFERROR(DJ{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BJ') - 1] = f'=IFERROR(DJ{rowIndex}/B{rowIndex},0)'
-
-        cellList[Tools.excelColumnToNumber('BK') - 1] = f'=IFERROR(DK{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BL') - 1] = f'=IFERROR(DK{rowIndex}/B{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BM') - 1] = f'=IFERROR(DL{rowIndex}/C{rowIndex},0)'
-        cellList[Tools.excelColumnToNumber('BN') - 1] = f'=IFERROR(DL{rowIndex}/B{rowIndex},0)'
 
     def append(self, summary:  Summary, checkDate: bool = True):
         date = datetime.fromtimestamp(summary.daytime)
@@ -180,44 +97,206 @@ class Sheets737:
 
         # 判断当前日期数据是否存在
         if checkDate:
-            existDate = self.__gs.date_exists_in_column('Sheet737', 'A', dateStr, weekday_aware=True)
+            existDate = self.__gs.date_exists_in_column(self.__sheetName, 'A', dateStr, weekday_aware=True)
             if existDate:
                 return True
 
-        rowCount = self.__gs.get_data_row_count('Sheet737')
+        rowCount = self.__gs.get_data_row_count(self.__sheetName)
 
-        length = Tools.excelColumnToNumber('DL')
+        length = len(Sheets737.__sheetStructList)
         default_value = None  # 可以替换为你想要的初始值
         cellList = [default_value for _ in range(length)]
 
-        Sheets737.__fillList(rowCount + 1, cellList, summary, dateStr)
-        isSuccess = self.__gs.append_rows('Sheet737', [cellList])
+        self.__fillList(rowCount + 1, cellList, summary, dateStr)
+        isSuccess = self.__gs.append_rows(self.__sheetName, [cellList])
         if isSuccess:
-            print("sheet737,追加成功")
+            print(f"{self.__sheetName},追加成功")
             return True
         else:
-            print("sheet737,追加失败")
+            print(f"{self.__sheetName},追加失败")
             return False
 
     def update(self, summary:  Summary, indexRow):
         date = datetime.fromtimestamp(summary.daytime)
         dateStr: str = date.strftime("%Y-%m-%d")
 
-        length = Tools.excelColumnToNumber('DL')
+        length = len(Sheets737.__sheetStructList)
         default_value = None  # 可以替换为你想要的初始值
         cellList = [default_value for _ in range(length)]
 
-        Sheets737.__fillList(indexRow, cellList, summary, dateStr)
-        isSuccess = self.__gs.update_row('Sheet737',indexRow,[cellList],start_column=1)
+        self.__fillList(indexRow, cellList, summary, dateStr)
+        isSuccess = self.__gs.update_row(self.__sheetName,indexRow,[cellList],start_column=1)
         if isSuccess:
-            print("sheet737,修改成功")
+            print(f"{self.__sheetName},修改成功")
             return True
         else:
-            print("sheet737,修改失败")
+            print(f"{self.__sheetName},修改失败")
             return False
 
     def getDateColumn(self)->list:
-        result = self.__gs.get_column_data('Sheet737','A',skip_header=True)
+        result = self.__gs.get_column_data(self.__sheetName,'A',skip_header=True)
         if result is None or len(result) <= 0:
             return []
         return result[1:]
+
+    def getSheetStruct(self)->list[SheetStructItem]:
+        """
+        获取sheet表结构
+        """
+        columnCount = self.__gs_temp.get_column_count(self.__sheetName)
+        lastCellName = self.__gs_temp.column_index_to_letter(columnCount)
+        result1 = self.__gs_temp.read_range(f'{self.__sheetName}!A4:{lastCellName}4',value_render_option="FORMULA")
+        result2 = self.__gs_temp.read_range(f'{self.__sheetName}!A5:{lastCellName}7')
+
+        sheetStructList:list[SheetStructItem] = []
+        for i in range(columnCount):
+            variableName = result2[0][i]
+            function = str(result1[0][i])
+            value = result2[1][i]
+            conversionFunction = result2[2][i]
+
+            if function.find('=IFERROR') < 0:
+                function = ''
+
+            sheetStructItem = SheetStructItem(variableName=variableName,function=function,value=value,conversionFunction=conversionFunction)
+            sheetStructList.append(sheetStructItem)
+
+        return sheetStructList
+
+    def updateSheetStructByNewVar(self,variableName:str)->bool:
+        columnCount = self.__gs_temp.get_column_count(self.__sheetName)
+        # 获取公式列表索引
+        lenStruct = len(Sheets737.__sheetStructList)
+        isStart = False
+        indexFun = 0
+        for i in range(lenStruct):
+            sub = Sheets737.__sheetStructList[i]
+            if sub.function != '':
+                isStart = True
+            else:
+                if isStart:
+                    indexFun = i
+                    break
+
+        def insertSub(gs:GoogleSheets,indexFunLast,columnCountOld,isTemplate:bool=False)->bool:
+            nameFunLast = GoogleSheets.column_index_to_letter(indexFunLast)
+            # 在第n列后插入，并继承左侧格式
+            if not gs.insert_column(
+                sheet_name=self.__sheetName,
+                column=nameFunLast,
+                inherit_from_before=True
+            ):
+                return False
+
+            if not gs.insert_column(
+                sheet_name=self.__sheetName,
+                column=nameFunLast,
+                inherit_from_before=True
+            ):
+                return False
+
+            nameLastNew = GoogleSheets.column_index_to_letter(columnCountOld + 2)
+            if not gs.insert_column(
+                sheet_name=self.__sheetName,
+                column=nameLastNew,
+                inherit_from_before=True
+            ):
+                return False
+
+            # 合并标题栏
+            nameFunAdd1 = GoogleSheets.column_index_to_letter(indexFunLast+1)
+            nameFunAdd2 = GoogleSheets.column_index_to_letter(indexFunLast+2)
+            gs.merge_cells(self.__sheetName,f'{nameFunAdd1}1:{nameFunAdd2}1')
+
+            # 填充标题内容
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameFunAdd1}1:{nameFunAdd1}1',values = [[f'新字段:{variableName}']]):
+                return False
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameFunAdd1}2:{nameFunAdd2}2', values=[['占比充值','占比赠送']]):
+                return False
+
+
+            nameLastAdd = GoogleSheets.column_index_to_letter(columnCountOld + 3)
+            # 统计栏公式
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameFunAdd1}3:{nameFunAdd2}3',
+                                  values=[[f'=IFERROR({nameLastAdd}3/C3,0)', f'=IFERROR({nameLastAdd}3/B3,0)']]):
+                return False
+
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}1:{nameLastAdd}1',
+                           values=[[f'新字段:{variableName}']]):
+                return False
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}3:{nameLastAdd}3',
+                           values=[[f'=SUM({nameLastAdd}4:{nameLastAdd}3000)']]):
+                return False
+
+
+            if not isTemplate:
+                return True
+
+            # 填充公式和值
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameFunAdd1}4:{nameFunAdd2}4',
+                           values=[[f'=IFERROR({nameLastAdd}4/C4,0)', f'=IFERROR({nameLastAdd}4/B4,0)']]):
+                return False
+
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}4:{nameLastAdd}4',
+                           values=[[100]]):
+                return False
+
+            # 填充对象名称
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}5:{nameLastAdd}5',
+                           values=[[variableName]]):
+                return False
+
+            # 填充转换函数
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}6:{nameLastAdd}6',
+                           values=[['DivideBy100']]):
+                return False
+
+            # 填充转换可变参数
+            if not gs.write_range(range_name=f'{self.__sheetName}!{nameLastAdd}7:{nameLastAdd}7',
+                           values=[['variable']]):
+                return False
+
+            return True
+
+        if not insertSub(self.__gs_temp,indexFun,columnCount,isTemplate=True):
+            return False
+        if not insertSub(self.__gs, indexFun, columnCount):
+            return False
+
+        return True
+
+    def checkNewVarForSheetStruct(self,summary:  Summary)->bool:
+        newVarList:list[str] = []
+        for k in dir(summary.gift_coins_detail):
+            # 排除私有成员
+            if k.startswith('__'):
+                continue
+            attr = getattr(summary.gift_coins_detail, k)
+            # 排除方法
+            if callable(attr):
+                continue
+
+            bHave = False
+            for sub in Sheets737.__sheetStructList:
+                if sub.variableName == k:
+                    bHave = True
+                    break
+            if not bHave:
+                newVarList.append(k)
+
+        lenNew = len(newVarList)
+        if lenNew <= 0:
+            return False
+
+        print(f'添加sheet新字段：{lenNew}')
+        for i in range(lenNew):
+            newVar = newVarList[i]
+            print(f'{i+1} 执行中...')
+            self.updateSheetStructByNewVar(newVar)
+            print(f'{i + 1} 新增成功')
+            #
+            # 获取新的结构
+            Sheets737.__sheetStructList = self.getSheetStruct()
+
+        return True
+

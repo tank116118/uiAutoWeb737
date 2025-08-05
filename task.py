@@ -38,27 +38,59 @@ class Task(QThread):
         self.task737()
         self.taskSete7()
 
-    def taskSete7(self):
+    def taskSete7(self,waitDiff=True):
         timeNow = datetime.now()
         time_diff = timeNow - self.__timeBefore7
         time_diff_hour = time_diff.total_seconds() / 3600
 
         webSite7 = WebSite7()
+        sheets7 = Sheets7()
         dateLast = Tools.normalize_date(self.__dateColumn7[-1])
-        if time_diff_hour < 1:
-            listItem = webSite7.getSummary(dateLast)
-            if listItem:
-                print('sete7 会话有效')
-            else:
-                print('sete7 会话失效..')
-            return
+
+        if waitDiff:
+            if time_diff_hour < 1:
+                listItem = webSite7.getSummary(dateLast)
+                if listItem:
+                    print('sete7 会话有效')
+                else:
+                    print('sete7 会话失效..')
+                    return
+                # 判断是否有新字段
+                if sheets7.checkNewVarForSheetStruct(listItem):
+                    # 获取当前日期
+                    dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
+                    lenDateColumn = len(self.__dateColumn7)
+                    for single_date in Tools.date_range('2025-06-02', dateTo):
+                        if self.__stopFlag:
+                            break
+                        dateStr = single_date.strftime('%Y-%m-%d')
+                        summaryList: list = webSite7.getSummary(dateStr)
+                        operating = webSite7.getOperating(dateStr)
+                        if len(summaryList) <= 0 or operating is None:
+                            break
+
+                        indexRow = 0
+                        for j in range(lenDateColumn):
+                            if dateStr == self.__dateColumn7[j]:
+                                indexRow = j + 1
+                                break
+
+                        if indexRow > 0:
+                            if not sheets7.update(summaryList, dateStr, operating.payCash, indexRow + 3):
+                                break
+                        else:
+                            if not sheets7.append(summaryList, dateStr, operating.payCash, True):
+                                break
+                return
 
         self.__timeBefore7 = datetime.now()
 
         today = datetime.now().date()
         dateTo = str(today + timedelta(days=1))
-        sheets7 = Sheets7()
+        lenDateColumn = len(self.__dateColumn7)
         for single_date in Tools.date_range(dateLast, dateTo):
+            if self.__stopFlag:
+                break
             dateStr = single_date.strftime('%Y-%m-%d')
             summaryList: list = webSite7.getSummary(dateStr)
             operating = webSite7.getOperating(dateStr)
@@ -66,43 +98,80 @@ class Task(QThread):
             if len(summaryList) <= 0 or operating is None:
                 break
 
-            if dateStr == dateLast:
-                indexRow = len(self.__dateColumn7)
+            indexRow = 0
+            for j in range(lenDateColumn):
+                if dateStr == self.__dateColumn7[j]:
+                    indexRow = j + 1
+                    break
+
+            if indexRow > 0:
                 if not sheets7.update(summaryList,dateStr, operating.payCash,  indexRow + 3):
                     break
-            if summaryList:
+            else:
                 if not sheets7.append(summaryList, dateStr, operating.payCash, True):
                     break
 
         self.__dateColumn7 = sheets7.getDateColumn()
 
 
-    def task737(self):
+    def task737(self,waitDiff=True):
         timeNow = datetime.now()
         time_diff = timeNow - self.__timeBefore737
         time_diff_hour = time_diff.total_seconds() / 3600
 
         webSite737 = WebSite737()
+        sheets737 = Sheets737()
         dateLast = Tools.normalize_date(self.__dateColumn737[-1])
-        if time_diff_hour < 1:
-            listItem = webSite737.getSummary(page=1)
-            if listItem:
-                print('737 会话有效')
-            else:
-                print('737 会话失效..')
-            return
+
+        if waitDiff:
+            if time_diff_hour < 1:
+                listItem = webSite737.getSummary(page=1)
+                if listItem:
+                    print('737 会话有效')
+                else:
+                    print('737 会话失效..')
+                    return
+                # 判断是否有新字段
+                if sheets737.checkNewVarForSheetStruct(listItem[0]):
+                    # 更新所有数据
+                    self.__dateColumn737 = sheets737.getDateColumn()
+
+                    summaryList = webSite737.getSummary(page=1, limit=3000)
+                    lenList = len(summaryList)
+                    lenDateColumn = len(self.__dateColumn737)
+                    for i in range(lenList - 1, -1, -1):
+                        if self.__stopFlag:
+                            break
+                        summary = summaryList[i]
+
+                        date = datetime.fromtimestamp(summary.daytime)
+                        dateStr: str = Tools.normalize_date(date.strftime("%Y-%m-%d"))
+                        indexRow = 0
+                        for j in range(lenDateColumn):
+                            if dateStr == self.__dateColumn737[j]:
+                                indexRow = j + 1
+                                break
+
+                        if indexRow > 0:
+                            if not sheets737.update(summary, indexRow + 3):
+                                break
+                        else:
+                            if not sheets737.append(summary, True):
+                                break
+                    self.__dateColumn737 = sheets737.getDateColumn()
+                return
 
         self.__timeBefore737 = datetime.now()
 
         today = datetime.now().date()
         dateTo = str(today + timedelta(days=1))
-
-        sheets737 = Sheets737()
         dateDiff = Tools.date_diff(dateTo,dateLast)
-        summaryList = webSite737.getSummary(page=1, limit=dateDiff + 1)
+        summaryList = webSite737.getSummary(page=1, limit=dateDiff + 3)
         lenList = len(summaryList)
         lenDateColumn = len(self.__dateColumn737)
         for i in range(lenList - 1, -1, -1):
+            if self.__stopFlag:
+                break
             summary = summaryList[i]
 
             date = datetime.fromtimestamp(summary.daytime)
@@ -114,7 +183,6 @@ class Task(QThread):
                     break
 
             if indexRow > 0:
-                indexRow = len(self.__dateColumn737)
                 if not sheets737.update(summary,indexRow+3):
                     break
             else:
@@ -134,12 +202,15 @@ class Task(QThread):
             lenList = len(summaryList)
             if lenList > 0:
                 for i in range(lenList-1,-1,-1):
+                    if self.__stopFlag:
+                        break
                     summary = summaryList[i]
                     sheets737.append(summary,False)
 
             self.__dateColumn737 = sheets737.getDateColumn()
         else:
             self.__dateColumn737 = dateColumn
+            self.task737(waitDiff=False)
 
         # ===============
         sheets7 = Sheets7()
@@ -148,16 +219,19 @@ class Task(QThread):
         if lenDate <= 0:
             webSite7 = WebSite7()
             # 获取当前日期
-            dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo'))
+            dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
             for single_date in Tools.date_range('2025-06-02', dateTo):
+                if self.__stopFlag:
+                    break
                 dateStr = single_date.strftime('%Y-%m-%d')
                 summaryList:list = webSite7.getSummary(dateStr)
                 operating = webSite7.getOperating(dateStr)
                 if summaryList:
-                    sheets7.append(summaryList[0],dateStr,operating.payCash,False)
+                    sheets7.append(summaryList,dateStr,operating.payCash,False)
             self.__dateColumn7 = sheets7.getDateColumn()
         else:
             self.__dateColumn7 = dateColumn2
+            self.taskSete7(waitDiff=False)
 
 
     def statusMsg(self, msg: str, timeout: int = None):
@@ -182,6 +256,6 @@ class Task(QThread):
             if self.__stopFlag:
                 break
             self.runTask()
-            time.sleep(60)
+            time.sleep(120)
 
         self.sendSignalMsg('taskStop', None, self.uid)

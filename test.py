@@ -141,13 +141,22 @@ from datetime import datetime, timedelta
 #         time.sleep(1)
 #         print('done')
 
-from datetime import date, timedelta
 
-today = datetime.strptime('2025-01-01', "%Y-%m-%d").date()
-print("今天:", today)
+# sheets737 = Sheets737()
+# webSite737 = WebSite737()
+# summaryList = webSite737.getSummary(page=1)
+# sheets737.getSheetStruct()
+# sheets737.checkNewVarForSheetStruct(summaryList[0])
+# sheets737.updateSheetStructByNewVar('abc')
 
-next_day = str(today + timedelta(days=1))
-print("明天:", next_day)
+sheets7 = Sheets7()
+webSite7 = WebSite7()
+# sheets7.getSheetStruct()
+# sheets7.updateSheetStructByNewVar('新字段')
+listA = webSite7.getSummary('2025-08-04')
+if listA:
+    sheets7.checkNewVarForSheetStruct(listA)
+
 
 
 
