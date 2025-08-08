@@ -152,8 +152,8 @@ class Sheets737:
         for i in range(columnCount):
             variableName = result2[0][i]
             function = str(result1[0][i])
-            value = result2[1][i]
-            conversionFunction = result2[2][i]
+            conversionFunction = result2[1][i]
+            value = result2[2][i]
 
             if function.find('=IFERROR') < 0:
                 function = ''

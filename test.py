@@ -123,23 +123,23 @@ from datetime import datetime, timedelta
 #             sheets7.append(summaryList, dateStr,operating.payCash,False)
 #         print('done')
 
-# if __name__ == "__main__":
-#     sheets737 = Sheets737()
-#     webSite737 = WebSite737()
-#
-#     summaryList = webSite737.getSummary(page=1,limit=1000)
-#     lenList = len(summaryList)
-#     indexRow = 4
-#     for i in range(lenList-1,-1,-1):
-#         summary = summaryList[i]
-#         # sheets737.append(summary)
-#         if not sheets737.update(summary,indexRow):
-#             print('修改失败')
-#             break
-#
-#         indexRow += 1
-#         time.sleep(1)
-#         print('done')
+if __name__ == "__main__":
+    sheets737 = Sheets737()
+    webSite737 = WebSite737()
+
+    summaryList = webSite737.getSummary(page=1,limit=1000)
+    lenList = len(summaryList)
+    indexRow = 4
+    for i in range(lenList-1,-1,-1):
+        summary = summaryList[i]
+        # sheets737.append(summary)
+        if not sheets737.update(summary,indexRow):
+            print('修改失败')
+            break
+
+        indexRow += 1
+        time.sleep(1)
+        print('done')
 
 
 # sheets737 = Sheets737()
