@@ -149,13 +149,13 @@ from datetime import datetime, timedelta
 # sheets737.checkNewVarForSheetStruct(summaryList[0])
 # sheets737.updateSheetStructByNewVar('abc')
 
-sheets7 = Sheets7()
-webSite7 = WebSite7()
+# sheets7 = Sheets7()
+# webSite7 = WebSite7()
 # sheets7.getSheetStruct()
 # sheets7.updateSheetStructByNewVar('新字段')
-listA = webSite7.getSummary('2025-08-04')
-if listA:
-    sheets7.checkNewVarForSheetStruct(listA)
+# listA = webSite7.getSummary('2025-08-04')
+# if listA:
+#     sheets7.checkNewVarForSheetStruct(listA)
 
 
 

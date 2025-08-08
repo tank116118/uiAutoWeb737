@@ -35,8 +35,11 @@ class Task(QThread):
         self.__stopFlag = True
 
     def runTask(self):
-        self.task737()
-        self.taskSete7()
+        try:
+            self.task737()
+            self.taskSete7()
+        except Exception as e:
+            print(e)
 
     def taskSete7(self,waitDiff=True):
         timeNow = datetime.now()
@@ -112,7 +115,6 @@ class Task(QThread):
                     break
 
         self.__dateColumn7 = sheets7.getDateColumn()
-
 
     def task737(self,waitDiff=True):
         timeNow = datetime.now()
@@ -191,7 +193,6 @@ class Task(QThread):
 
         self.__dateColumn737 = sheets737.getDateColumn()
 
-
     def __initialTask(self):
         sheets737 = Sheets737()
         dateColumn = sheets737.getDateColumn()
@@ -233,7 +234,6 @@ class Task(QThread):
             self.__dateColumn7 = dateColumn2
             self.taskSete7(waitDiff=False)
 
-
     def statusMsg(self, msg: str, timeout: int = None):
         if timeout is None:
             timeout = 0
@@ -251,7 +251,11 @@ class Task(QThread):
         self.signal_msg.emit(method, operator, params)# type: ignore
 
     def run(self):
-        self.__initialTask()
+        try:
+            self.__initialTask()
+        except Exception as e:
+            print(e)
+
         while True:
             if self.__stopFlag:
                 break
