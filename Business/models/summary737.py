@@ -66,7 +66,7 @@ class Summary:
     new_user: int = 0  #新增用户
     recharge_user: int = 0  #充值用户
     remain_commission: int = 0
-    system_deduction: int = 0
+    system_deduction: int = 0 #平台扣除
     system_score: int = 0  #平台盈利
     total_bet: int = 0  #投注金额
     total_bet_count: int = 0

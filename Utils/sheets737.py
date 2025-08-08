@@ -49,8 +49,11 @@ class Sheets737:
 
         giftAmount += summary.commission
         diffRechargeAndWithdraw = summary.total_recharge - summary.total_withdraw
+        issueCoinsSubSystemDeduction = summary.issue_coins - summary.system_deduction
         valuesDict['giftAmount'] = giftAmount
         valuesDict['diffRechargeAndWithdraw'] = diffRechargeAndWithdraw
+        valuesDict['issueCoinsSubSystemDeduction'] = issueCoinsSubSystemDeduction
+
 
         for k in dir(summary.act_consume_detail):
             # 排除私有成员

@@ -137,9 +137,13 @@ if __name__ == "__main__":
             print('修改失败')
             break
 
+        # date = datetime.fromtimestamp(summary.daytime)
+        # dateStr: str = date.strftime("%Y-%m-%d")
+        # print(f'日期：{dateStr}，直充金额：{summary}')
+
         indexRow += 1
         time.sleep(1)
-        print('done')
+        # print('done')
 
 
 # sheets737 = Sheets737()
