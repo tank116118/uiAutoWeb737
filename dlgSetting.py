@@ -1,8 +1,8 @@
 
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QDesktopWidget, QDialog
+from PyQt5.QtWidgets import QDialog
 
-from Business.models.storage import Storage, STORAGE_TYPE
+from models import Storage, STORAGE_TYPE
 from UI.uiSetting import Ui_Dialog
 import warnings
 

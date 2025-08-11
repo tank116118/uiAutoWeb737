@@ -1,73 +1,49 @@
-from PyQt5 import QtGui
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QDesktopWidget, QDialog
+import sys
+import time
 
-from Business.models.storage import Storage, STORAGE_TYPE
-from UI.uiMain import Ui_Dialog
-import warnings
+from task import TimerTask, PlatformAdapter
 
-from dlgSetting import DlgSetting
-from task import Task
 
-warnings.filterwarnings('ignore', category=DeprecationWarning)
+def main():
+    """主函数"""
+    # 初始化定时任务
+    timer = TimerTask(interval=300)  # 每10秒执行一次
 
-class Main(QDialog):
-    signal_msg = pyqtSignal(str, str, str)
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.uiMain: Ui_Dialog = Ui_Dialog()
-        self.uiMain.setupUi(self)
+    # 设置信号处理器
+    PlatformAdapter.setupSignalHandlers(
+        lambda sig, frame: timer.shutdown() or sys.exit(0)
+    )
 
-        self.__task: Task | None = None
+    # 启动定时任务
+    timer.start()
 
-        # 获取桌面对象
-        desktop = QDesktopWidget()
-        # 获取主屏幕的大小
-        screen_rect = desktop.screenGeometry()
-        self.screenWidth = screen_rect.width()
-        self.screenHeight = screen_rect.height()
+    # 主线程保持运行
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        timer.shutdown()
 
-        self.uiMain.btnRun.clicked.connect(self.onRun)
-        self.uiMain.btnSetting.clicked.connect(self.onSetting)
 
-    def onRun(self):
-        if self.uiMain.btnRun.text() == '运行':
-            if self.__task is None:
-                self.__task = Task()
-                self.__task.signal_msg.connect(self.onReceiveMessage)
-                self.__task.start()
-                self.uiMain.btnRun.setText('停止运行')
+def parseArgs():
+    """解析命令行参数"""
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "start":
+            PlatformAdapter.runAsService(main)
+        elif sys.argv[1] == "stop":
+            print("停止命令需要根据平台使用相应服务管理工具")
+            sys.exit(0)
+        elif sys.argv[1] in ("-h", "--help"):
+            print("用法: python timer_task.py [start|stop]")
+            print("  start - 作为服务/守护进程启动")
+            print("  stop  - 停止服务")
+            sys.exit(0)
         else:
-            if self.__task:
-                self.__task.stop()
-                self.__task = None
-                self.uiMain.btnRun.setText('运行')
+            print("未知参数，使用 --help 查看帮助")
+            sys.exit(1)
+    else:
+        main()
 
-    def onSetting(self):
-        dlgSetting = DlgSetting()
-        if not dlgSetting.exec():
-            return
 
-        token737 = dlgSetting.getToken737()
-        tokenSete7 = dlgSetting.getTokenSete7()
-
-        storage = Storage(storageType=STORAGE_TYPE.CONFIG)
-        storage.setStorage('token737',token737)
-        storage.setStorage('tokenSete7', tokenSete7)
-
-    def closeEvent(self, a0: QtGui.QCloseEvent|None) -> None:
-        """
-        关闭窗口事件
-        """
-        pass
-
-    # noinspection PyUnusedLocal
-    def onReceiveMessage(self, method: str, operator: str, params: str):
-        """
-        任务消息回调
-        :param method:
-        :param operator:
-        :param params:
-        :return:
-        """
-        pass
+if __name__ == "__main__":
+    parseArgs()

@@ -1,5 +1,7 @@
-from Business.models.sheetStructItem import SheetStructItem
-from Business.models.summary7 import SummaryItem
+import logging
+
+from models.sheetStructItem import SheetStructItem
+from models.summary7 import SummaryItem
 from paths import getProjectPath
 from Utils.googleSheets import GoogleSheets
 class Sheets7:
@@ -8,7 +10,7 @@ class Sheets7:
     def __init__(self):
         projectPath = getProjectPath()
         CREDENTIALS_FILE = f'{projectPath}Static/autobotchats-4c5cfe7df47e.json'
-        SPREADSHEET_ID = '13QPgO93klnr4KTckiZuozY6wBahUkbLnRBoUdKiR72c'
+        SPREADSHEET_ID = '1F0T347ExqIuZbeI9CjH_URRxnQMK16MTanPDl-HDZKM'
         SPREADSHEET_ID_TEMPLATE = '1snBjPsrS12rXO3Kkcye6uzezRO81ILeyqzXNtXldl5w'
         self.__sheetName = 'SheetSete7'
         self.__gs = GoogleSheets(CREDENTIALS_FILE, SPREADSHEET_ID)
@@ -67,10 +69,10 @@ class Sheets7:
         Sheets7.__fillList(rowCount+1,cellList,summary,dateStr,total_recharge)
         isSuccess = self.__gs.append_rows(self.__sheetName, [cellList])
         if isSuccess:
-            print(f"{self.__sheetName},追加成功")
+            logging.info(f"{self.__sheetName},追加成功")
             return True
         else:
-            print(f"{self.__sheetName},追加失败")
+            logging.error(f"{self.__sheetName},追加失败")
             return False
 
     def update(self, summary:list[SummaryItem],dateStr:str,total_recharge:float,indexRow):
@@ -82,10 +84,10 @@ class Sheets7:
         Sheets7.__fillList(indexRow, cellList,summary,dateStr,total_recharge)
         isSuccess = self.__gs.update_row(self.__sheetName,indexRow,[cellList])
         if isSuccess:
-            print("sheet737,修改成功")
+            logging.info(f"{self.__sheetName},修改成功")
             return True
         else:
-            print("sheet737,修改失败")
+            logging.error(f"{self.__sheetName},修改失败")
             return False
 
     def getDateColumn(self)->list:
@@ -230,12 +232,12 @@ class Sheets7:
         if lenNew <= 0:
             return False
 
-        print(f'添加sheet新字段：{lenNew}')
+        logging.info(f'添加sheet新字段：{lenNew}')
         for i in range(lenNew):
             newVar = newVarList[i]
-            print(f'{i+1} 执行中...')
+            logging.info(f'{i+1} 执行中...')
             self.updateSheetStructByNewVar(newVar)
-            print(f'{i + 1} 新增成功')
+            logging.info(f'{i + 1} 新增成功')
             #
             # 获取新的结构
             Sheets7.__sheetStructList = self.getSheetStruct()

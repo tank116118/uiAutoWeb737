@@ -1,9 +1,10 @@
 import json
+import logging
 
 from requests import Session, Request
 
-from Business.models.storage import Storage, STORAGE_TYPE
-from Business.models.summary7 import SummaryItem, Operating
+from models.storage import Storage, STORAGE_TYPE
+from models.summary7 import SummaryItem, Operating
 from Utils.tools import Tools
 
 
@@ -40,10 +41,10 @@ class WebSite7:
                         for sub in data:
                             result.append(SummaryItem(**sub))
                 else:
-                    print(jsonObj.get('msg'))
+                    logging.error(jsonObj.get('msg'))
             return result
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         return []
 
@@ -73,10 +74,10 @@ class WebSite7:
                     if data:
                         result = Operating.from_dict(data[0])
                 else:
-                    print(jsonObj.get('msg'))
+                    logging.error(jsonObj.get('msg'))
             return result
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         return None
 

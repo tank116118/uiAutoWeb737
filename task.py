@@ -1,9 +1,10 @@
-import json
-import time
-import uuid
+import threading
+import signal
+import sys
+import logging
+import os
 from datetime import datetime, timedelta
-
-from PyQt5.QtCore import QThread, pyqtSignal
+from pathlib import Path
 
 from Utils.sheets7 import Sheets7
 from Utils.sheets737 import Sheets737
@@ -11,37 +12,119 @@ from Utils.tools import Tools
 from Utils.webSite7 import WebSite7
 from Utils.webSite737 import WebSite737
 
+class PlatformAdapter:
+    """处理平台差异的适配器类"""
+    @staticmethod
+    def getLogDir():
+        """获取日志目录"""
+        if os.name == 'posix':  # Linux/Unix
+            return Path('/var/log/timer_task')
+        else:  # Windows
+            return Path(os.environ.get('ProgramData', 'C:/')) / 'TimerTask' / 'logs'
 
-class Task(QThread):
-    signal_msg = pyqtSignal(str, str, str)
+    @staticmethod
+    def setupSignalHandlers(handler):
+        """设置平台特定的信号处理器"""
+        if os.name == 'posix':  # Linux/Unix
+            signal.signal(signal.SIGINT, handler)  # Ctrl+C
+            signal.signal(signal.SIGTERM, handler)  # kill命令
+        else:  # Windows
+            signal.signal(signal.SIGINT, handler)  # Ctrl+C
+            try:
+                import win32api
+                def consoleCtrlHandler(ctrl_type):
+                    if ctrl_type in (win32api.CTRL_C_EVENT, win32api.CTRL_BREAK_EVENT):
+                        handler(signal.SIGINT, None)
+                        return True
+                    return False
 
-    def __init__(self, showMsg:bool = True, parent=None):
-        super(Task, self).__init__(parent)
-        self.uid = str(uuid.uuid4()).replace('-', '')
-        self.__stopFlag = False
-        self.__showMsg = showMsg
-        # 设置名称
-        self.setObjectName(f'customThread_{str(uuid.uuid4()).replace("-", "")[0:6]}')
+                win32api.SetConsoleCtrlHandler(consoleCtrlHandler, True)
+            except ImportError:
+                pass
+
+    @staticmethod
+    def runAsService(main_func):
+        """作为服务/守护进程运行"""
+        if os.name == 'posix':  # Linux/Unix
+            try:
+                import daemon
+                with daemon.DaemonContext():
+                    main_func()
+            except ImportError:
+                main_func()
+        else:  # Windows
+            try:
+                import servicemanager
+                import win32serviceutil
+                import win32service
+
+                class TimerTaskService(win32serviceutil.ServiceFramework):
+                    _svc_name_ = "PythonTimerTask"
+                    _svc_display_name_ = "Python Timer Task Service"
+
+                    def SvcDoRun(self):
+                        main_func()
+
+                    def SvcStop(self):
+                        self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
+                        TimerTask.instance.shutdown()
+
+                if __name__ == '__main__':
+                    win32serviceutil.HandleCommandLine(TimerTaskService)
+            except ImportError:
+                main_func()
+
+class TimerTask:
+    """跨平台定时任务类"""
+    instance = None
+
+    def __init__(self, interval=60):
+        TimerTask.instance = self
+        self.interval = interval
+        self.timer = None
+        self.isRunning = False
+        self.lock = threading.Lock()
+        self._setupLogging()
 
         self.__dateColumn7 = []
         self.__dateColumn737 = []
         self.__timeBefore7 = datetime.now()
         self.__timeBefore737 = datetime.now()
 
-    def __del__(self):
-        pass
+    def _setupLogging(self):
+        """配置跨平台日志"""
+        log_dir = PlatformAdapter.getLogDir()
+        log_dir.mkdir(parents=True, exist_ok=True)
 
-    def stop(self):
-        self.__stopFlag = True
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_dir / 'timer_task.log'),
+                logging.StreamHandler()
+            ]
+        )
 
     def runTask(self):
-        try:
-            self.task737()
-            self.taskSete7()
-        except Exception as e:
-            print(e)
+        """执行定时任务"""
+        with self.lock:
+            if not self.isRunning:
+                return
 
-    def taskSete7(self,waitDiff=True):
+            try:
+                logging.info(f"执行定时任务... {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                # 在这里添加你的任务逻辑
+                self._task737()
+                self._taskSete7()
+
+            except Exception as e:
+                logging.error(f"任务执行出错: {str(e)}")
+
+            # 设置下次执行
+            self.timer = threading.Timer(self.interval, self.runTask)
+            self.timer.start()
+
+    def _taskSete7(self, waitDiff=True):
         timeNow = datetime.now()
         time_diff = timeNow - self.__timeBefore7
         time_diff_hour = time_diff.total_seconds() / 3600
@@ -54,9 +137,9 @@ class Task(QThread):
             if time_diff_hour < 1:
                 listItem = webSite7.getSummary(dateLast)
                 if listItem:
-                    print('sete7 会话有效')
+                    logging.info('sete7 会话有效')
                 else:
-                    print('sete7 会话失效..')
+                    logging.error('sete7 会话失效..')
                     return
                 # 判断是否有新字段
                 if sheets7.checkNewVarForSheetStruct(listItem):
@@ -64,7 +147,7 @@ class Task(QThread):
                     dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
                     lenDateColumn = len(self.__dateColumn7)
                     for single_date in Tools.date_range('2025-06-02', dateTo):
-                        if self.__stopFlag:
+                        if not self.isRunning:
                             break
                         dateStr = single_date.strftime('%Y-%m-%d')
                         summaryList: list = webSite7.getSummary(dateStr)
@@ -92,7 +175,7 @@ class Task(QThread):
         dateTo = str(today + timedelta(days=1))
         lenDateColumn = len(self.__dateColumn7)
         for single_date in Tools.date_range(dateLast, dateTo):
-            if self.__stopFlag:
+            if not self.isRunning:
                 break
             dateStr = single_date.strftime('%Y-%m-%d')
             summaryList: list = webSite7.getSummary(dateStr)
@@ -116,7 +199,7 @@ class Task(QThread):
 
         self.__dateColumn7 = sheets7.getDateColumn()
 
-    def task737(self,waitDiff=True):
+    def _task737(self, waitDiff=True):
         timeNow = datetime.now()
         time_diff = timeNow - self.__timeBefore737
         time_diff_hour = time_diff.total_seconds() / 3600
@@ -129,9 +212,9 @@ class Task(QThread):
             if time_diff_hour < 1:
                 listItem = webSite737.getSummary(page=1)
                 if listItem:
-                    print('737 会话有效')
+                    logging.info('737 会话有效')
                 else:
-                    print('737 会话失效..')
+                    logging.error('737 会话失效..')
                     return
                 # 判断是否有新字段
                 if sheets737.checkNewVarForSheetStruct(listItem[0]):
@@ -142,7 +225,7 @@ class Task(QThread):
                     lenList = len(summaryList)
                     lenDateColumn = len(self.__dateColumn737)
                     for i in range(lenList - 1, -1, -1):
-                        if self.__stopFlag:
+                        if not self.isRunning:
                             break
                         summary = summaryList[i]
 
@@ -172,7 +255,7 @@ class Task(QThread):
         lenList = len(summaryList)
         lenDateColumn = len(self.__dateColumn737)
         for i in range(lenList - 1, -1, -1):
-            if self.__stopFlag:
+            if not self.isRunning:
                 break
             summary = summaryList[i]
 
@@ -203,7 +286,7 @@ class Task(QThread):
             lenList = len(summaryList)
             if lenList > 0:
                 for i in range(lenList-1,-1,-1):
-                    if self.__stopFlag:
+                    if not self.isRunning:
                         break
                     summary = summaryList[i]
                     sheets737.append(summary,False)
@@ -211,7 +294,7 @@ class Task(QThread):
             self.__dateColumn737 = sheets737.getDateColumn()
         else:
             self.__dateColumn737 = dateColumn
-            self.task737(waitDiff=False)
+            self._task737(waitDiff=False)
 
         # ===============
         sheets7 = Sheets7()
@@ -222,7 +305,7 @@ class Task(QThread):
             # 获取当前日期
             dateTo = str(Tools.convertTimeToTimezone('America/Sao_Paulo').date())
             for single_date in Tools.date_range('2025-06-02', dateTo):
-                if self.__stopFlag:
+                if not self.isRunning:
                     break
                 dateStr = single_date.strftime('%Y-%m-%d')
                 summaryList:list = webSite7.getSummary(dateStr)
@@ -232,34 +315,34 @@ class Task(QThread):
             self.__dateColumn7 = sheets7.getDateColumn()
         else:
             self.__dateColumn7 = dateColumn2
-            self.taskSete7(waitDiff=False)
+            self._taskSete7(waitDiff=False)
 
-    def statusMsg(self, msg: str, timeout: int = None):
-        if timeout is None:
-            timeout = 0
-        self.sendSignalMsg('statusMsg', None, json.dumps({
-            "msg": msg, "timeout": timeout
-        }))
+    def start(self):
+        """启动定时任务"""
+        with self.lock:
+            if self.isRunning:
+                logging.warning("定时任务已经在运行中")
+                return
 
-    def sendSignalMsg(self, method: str, operator: str|None, params: str|None):
-        if method is None:
-            return
-        method = method.strip()
-        if len(method) <= 0:
-            return
+            self.__initialTask()  # 初始化任务
 
-        self.signal_msg.emit(method, operator, params)# type: ignore
+            self.isRunning = True
+            self.timer = threading.Timer(0, self.runTask)  # 立即执行第一次
+            self.timer.start()
+            logging.info("定时任务已启动")
 
-    def run(self):
-        try:
-            self.__initialTask()
-        except Exception as e:
-            print(e)
+    def stop(self):
+        """停止定时任务"""
+        with self.lock:
+            if not self.isRunning:
+                logging.warning("定时任务未在运行")
+                return
 
-        while True:
-            if self.__stopFlag:
-                break
-            self.runTask()
-            time.sleep(120)
+            self.isRunning = False
+            if self.timer:
+                self.timer.cancel()
+            logging.info("定时任务已停止")
 
-        self.sendSignalMsg('taskStop', None, self.uid)
+    def shutdown(self):
+        """关闭任务"""
+        self.stop()

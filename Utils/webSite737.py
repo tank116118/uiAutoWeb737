@@ -1,12 +1,13 @@
 import json
+import logging
 import time
 
 from requests import Session, Request
 
-from Business.models.storage import Storage, STORAGE_TYPE
+from models.storage import Storage, STORAGE_TYPE
 from Utils.tools import Tools
 from urllib.parse import quote
-from Business.models.summary737 import Summary
+from models.summary737 import Summary
 
 class WebSite737:
     def __init__(self):
@@ -52,10 +53,10 @@ class WebSite737:
                             summary = Summary.from_dict(sub)
                             result.append(summary)
                 else:
-                    print(jsonObj.get('msg'))
+                    logging.error(jsonObj.get('msg'))
             return result
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         return []
 
